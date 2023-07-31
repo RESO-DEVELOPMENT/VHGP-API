@@ -1,0 +1,86 @@
+﻿using DeliveryVHGP.Core.Interfaces;
+using DeliveryVHGP.Core.Models;
+using Microsoft.AspNetCore.Mvc;
+using static DeliveryVHGP.Core.Models.OrderAdminDto;
+
+namespace DeliveryVHGP.WebApi.Controllers
+{
+    [Route("api/v1/shippers")]
+    [ApiController]
+    public class ShippersController : ControllerBase
+    {
+        private readonly IRepositoryWrapper repository;
+        public ShippersController(IRepositoryWrapper repository)
+        {
+            this.repository = repository;
+        }
+        [HttpGet("{shipperId}/current-job")]
+        public async Task<ActionResult<EdgeModel>> GetCurrentEdgeOfShipper(string shipperId)
+        {
+            try
+            {
+                var edge = await repository.RouteAction.GetCurrentEdgeInRoute(shipperId);
+                if (edge == null)
+                {
+                    return NoContent();
+                }
+                return Ok(edge);
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+        [HttpGet("{shipperId}/wallet")]
+        public async Task<ActionResult<WalletsShipperModel>> GetBalaceWallet(string shipperId)
+        {
+            try
+            {
+                var walletBalance = await repository.Transaction.GetBalanceWallet(shipperId);
+                return Ok(new { StatusCode = "Successful", data = walletBalance });
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
+        [HttpGet("report")]
+        public async Task<ActionResult<DeliveryShipperReportModel>> GetDeliveryAllShipperReport([FromQuery] DateFilterRequest request, [FromQuery] MonthFilterRequest monthFilter, int page, int pageSize)
+        {
+            try
+            {
+                var report = await repository.ShipperHistory.GetDeliveryAllShipperReport(request, monthFilter, page, pageSize);
+                return Ok(new { StatusCode = "Successful", data = report });
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
+        [HttpGet("{shipperId}/report")]
+        public async Task<ActionResult<ShipperReportModel>> GetShipperReport(string shipperId, [FromQuery] DateFilterRequest request, [FromQuery] MonthFilterRequest monthFilter)
+        {
+            try
+            {
+                var report = await repository.ShipperHistory.GetShipperReport(shipperId, request, monthFilter);
+                return Ok(new { StatusCode = "Successful", data = report });
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
+    }
+}
