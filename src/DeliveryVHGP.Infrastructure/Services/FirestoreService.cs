@@ -12,9 +12,9 @@ namespace DeliveryVHGP.Infrastructure.Services
         public FirestoreService()
         {
             //string filepath = @"C:\Users\luan\Downloads\vinhome-e51b5-6ad177acbada.json";
-            string filepath = @"deliveryfood-9c436-e35107df256b.json";
+            string filepath = @"vhgp-9b167-ab783e847260.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filepath);           
-            projectId = "vinhome-e51b5";
+            projectId = "vhgp-9b167";
             fireStoreDb = FirestoreDb.Create(projectId);
         }
         public async Task AddRoute(RouteModel route)
