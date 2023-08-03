@@ -59,6 +59,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             var listproductdetail = await (from p in context.Products
                                            join s in context.Stores on p.StoreId equals s.Id
                                            join c in context.Categories on p.CategoryId equals c.Id
+                                           join pm in context.ProductInMenus on p.Id equals pm.ProductId
                                            where s.Id == storeId
                                            select new ProductDetailsModel()
                                            {
