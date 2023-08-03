@@ -4,6 +4,7 @@ using DeliveryVHGP.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
+using DeliveryVHGP.Core.Enums;
 
 namespace DeliveryVHGP.WebApi.Repositories
 {
@@ -21,7 +22,8 @@ namespace DeliveryVHGP.WebApi.Repositories
             {
                 Id = x.Id,
                 Name = x.Name,
-                Image = x.Image
+                Image = x.Image,
+                Status = x.Status,
             }).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return listbrand;
         }
@@ -38,7 +40,13 @@ namespace DeliveryVHGP.WebApi.Repositories
         }
         public async Task<BrandModels> CreateBrand(BrandModels brand)
         {
-            context.Brands.Add(new Brand { Id = brand.Id, Name = brand.Name, Image = brand.Image });
+            context.Brands.Add(new Brand 
+            { 
+                Id = brand.Id, 
+                Name = brand.Name, 
+                Image = brand.Image,
+                Status = brand.Status,
+            });
             await context.SaveChangesAsync();
             return brand;
 
@@ -61,10 +69,25 @@ namespace DeliveryVHGP.WebApi.Repositories
                 return null;
             }
             var result = await context.Brands.FindAsync(brandId);
+
+            if (result == null)
+            {
+                return null;
+            }
             result.Id = brand.Id;
             result.Name = brand.Name;
             result.Image = brand.Image;
+            result.Status = brand.Status;
 
+            BrandStatus brandStatus;
+            if(Enum.TryParse(brand.Status, out brandStatus)) 
+            {
+                result.Status = brandStatus.ToString();
+            }
+            else
+            {
+                result.Status = BrandStatus.Active.ToString();
+            }
             context.Entry(result).State = EntityState.Modified;
             try
             {

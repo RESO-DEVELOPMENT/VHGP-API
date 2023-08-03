@@ -4,6 +4,7 @@ using DeliveryVHGP.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
+using DeliveryVHGP.Core.Enums;
 
 namespace DeliveryVHGP.WebApi.Repositories
 {
@@ -68,11 +69,29 @@ namespace DeliveryVHGP.WebApi.Repositories
             {
                 return null;
             }
+
             var result = await context.StoreCategories.FindAsync(storecaId);
+            if(result == null)
+            {
+                return null;
+            }
             result.Id = storeCate.Id;
             result.Name = storeCate.Name;
             result.DefaultCommissionRate = storeCate.DefaultCommissionRate;
-            result.Status = storeCate.Status;
+            //result.Status = storeCate.Status;
+
+            //create newStatus for handle
+            StoreCategoryStatus newStatus;
+            //update new status, if valid then update new status
+            if(Enum.TryParse(storeCate.Status, out newStatus))
+            {
+                result.Status = newStatus.ToString();
+            }
+            else
+            {
+                //set default status if field is null or invalid
+                result.Status = StoreCategoryStatus.Active.ToString();
+            }
             context.Entry(result).State = EntityState.Modified;
             try
             {

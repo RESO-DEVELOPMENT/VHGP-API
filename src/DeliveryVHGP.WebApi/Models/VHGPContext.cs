@@ -152,6 +152,8 @@ namespace DeliveryVHGP.WebApi.Models
                 entity.Property(e => e.Image).HasMaxLength(255);
 
                 entity.Property(e => e.Name).HasMaxLength(255);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
             });
 
             modelBuilder.Entity<Building>(entity =>

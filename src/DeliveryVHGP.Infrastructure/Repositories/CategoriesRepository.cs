@@ -20,7 +20,8 @@ namespace DeliveryVHGP.WebApi.Repositories
 
         public async Task<IEnumerable<CategoryModel>> GetAll(int pageIndex, int pageSize)
         {
-            var listCate = await context.Categories.Where(x => x.Status == CategoryStatus.Active.ToString())
+            var listCate = await context.Categories
+                                 //.Where(x => x.Status == CategoryStatus.Active.ToString() || x.Status == CategoryStatus.Deactive.ToString())
                                  .Select(x => new CategoryModel
                 {
                     Id = x.Id,
