@@ -29,6 +29,7 @@ namespace DeliveryVHGP.WebApi.Models
         public string? CreateAt { get; set; }
         public string? UpdateAt { get; set; }
         public string? Status { get; set; }
+        public int? Priority { get; set; }
 
         public virtual Category? Category { get; set; }
         public virtual Store? Store { get; set; }

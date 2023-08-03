@@ -7,6 +7,7 @@
         public string? Image { get; set; }
         public string? CreateAt { get; set; }
         public string? UpdateAt { get; set; }
-        //public string? Status { get; set; }
+        public string? Status { get; set; }
+        public int? Priority { get; set; }
     }
 }

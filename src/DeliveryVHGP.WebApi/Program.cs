@@ -47,9 +47,8 @@ builder.Services.AddSwaggerGen(c =>
         //TermsOfService = new Uri("https://example.com/terms"),
         Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {
-            Name = "Dươngas",
-            Email = string.Empty,
-            Url = new Uri("https://www.facebook.com/duong.as.35/"),
+            Name = "VHGP",
+            Email = string.Empty
         }
     }
     );

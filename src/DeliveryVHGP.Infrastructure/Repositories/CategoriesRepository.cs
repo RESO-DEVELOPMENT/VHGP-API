@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using DeliveryVHGP.Infrastructure.Services;
 using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
+using DeliveryVHGP.Core.Enums;
+using System.Linq;
 
 namespace DeliveryVHGP.WebApi.Repositories
 {
@@ -18,15 +20,18 @@ namespace DeliveryVHGP.WebApi.Repositories
 
         public async Task<IEnumerable<CategoryModel>> GetAll(int pageIndex, int pageSize)
         {
-            var listCate = await context.Categories.
-                Select(x => new CategoryModel
+            var listCate = await context.Categories.Where(x => x.Status == CategoryStatus.Active.ToString())
+                                 .Select(x => new CategoryModel
                 {
                     Id = x.Id,
                     Name = x.Name,
                     Image = x.Image,
                     CreateAt = x.CreateAt,
                     UpdateAt = x.UpdateAt,
-                }).OrderByDescending(t => t.CreateAt).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                    Status = x.Status,
+                    Priority = x.Priority,
+                }
+                                 ).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return listCate;
         }
         public async Task<Object> GetCategoryById(string cateId)
@@ -55,8 +60,9 @@ namespace DeliveryVHGP.WebApi.Repositories
                                        Name = cate.Name,
                                        Image = cate.Image,
                                        CreateAt = cate.CreateAt,
-                                       UpdateAt = cate.UpdateAt
-                                   }).OrderByDescending(t => t.CreateAt).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                                       UpdateAt = cate.UpdateAt,
+                                       Priority = cate.Priority,
+                                   }).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return listCate;
         }
         public async Task<CategoryDto> CreateCategory(CategoryDto category)
@@ -69,7 +75,9 @@ namespace DeliveryVHGP.WebApi.Repositories
                 Name = category.Name,
                 Image = await _fileService.UploadFile(fileImg , category.Image),
                 Status = category.Status,
-                CreateAt = time
+                CreateAt = time,
+                Priority = category.Priority,
+                
             });
             await context.SaveChangesAsync();
             return category;
@@ -78,18 +86,27 @@ namespace DeliveryVHGP.WebApi.Repositories
         public async Task<Object> DeleteCategoryId(string CateId)
         {
             var Cate = await context.Categories.FindAsync(CateId);
-            context.Categories.Remove(Cate);
-            await context.SaveChangesAsync();
-
+            if (Cate != null)
+            {
+                if(Cate.Status != CategoryStatus.Deactive.ToString())
+                {
+                    Cate.Status = CategoryStatus.Deactive.ToString();
+                    await context.SaveChangesAsync();
+                }
+            }
+            /*context.Categories.Remove(Cate);
+            await context.SaveChangesAsync();*/
             return Cate;
-
         }
         public async Task<Object> UpdateCategoryById(string categoryId, CategoryDto category, Boolean imgUpdate)
         {
-            string fileImg = "ImagesCategorys";
+            string fileImg = "ImagesCategories";
             string time = await GetTime();
             var result = await context.Categories.FindAsync(categoryId);
             result.Name = category.Name;
+            result.Status = category.Status;
+            result.Priority = category.Priority;
+
             if (imgUpdate == true)
             {
                 result.Image = await _fileService.UploadFile(fileImg, category.Image);

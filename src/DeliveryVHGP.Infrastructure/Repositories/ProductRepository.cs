@@ -47,9 +47,10 @@ namespace DeliveryVHGP.WebApi.Repositories
                                                ProductCategory = c.Name,
                                                CreateAt = p.CreateAt,
                                                UpdateAt = p.UpdateAt,
-                                               Status = pm.Status
+                                               Status = pm.Status,
+                                               Priority = p.Priority,
                                            }
-                                     ).OrderByDescending(t => t.CreateAt).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                                     ).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return listproductdetail;
         }
@@ -80,9 +81,10 @@ namespace DeliveryVHGP.WebApi.Repositories
                                                CategoryId = c.Id,
                                                ProductCategory = c.Name,
                                                CreateAt = p.CreateAt,
-                                               UpdateAt = p.UpdateAt
+                                               UpdateAt = p.UpdateAt,
+                                               Priority = p.Priority,
                                            }
-                                     ).OrderByDescending(t => t.CreateAt).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                                     ).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return listproductdetail;
         }
@@ -114,11 +116,13 @@ namespace DeliveryVHGP.WebApi.Repositories
                                      CategoryId = c.Id,
                                      ProductCategory = c.Name,
                                      CreateAt = p.CreateAt,
-                                     UpdateAt = p.UpdateAt
+                                     UpdateAt = p.UpdateAt,
+                                     //Priority = p.Priority
                                  }).FirstOrDefaultAsync();
 
             return product;
         }
+
         public async Task<ProductModel> CreatNewProduct(ProductModel pro)
         {
             string fileImg = "ImagesProducts";
@@ -140,7 +144,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                     CategoryId = pro.CategoryId,
                     Rate = pro.Rate,
                     Description = pro.Description,
-                    CreateAt = time
+                    CreateAt = time,
+                    Priority = pro.Priority
                 });
             await context.SaveChangesAsync();
             return pro;
@@ -167,6 +172,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             pro.StoreId = product.StoreId;
             pro.CategoryId = product.CategoryId;
             pro.UpdateAt = time;
+            pro.Priority = product.Priority;
 
             var listProInMenu = await context.ProductInMenus.Where(pm => pm.ProductId == proId).ToListAsync();
             var listCateInMenu = await context.CategoryInMenus.Where(cm => cm.CategoryId == product.CategoryId).ToListAsync();
@@ -190,6 +196,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             return product;
         }
 
+
         public async Task<Object> DeleteProductById(string id)
         {
             var product = await context.Products.FindAsync(id);
@@ -201,6 +208,6 @@ namespace DeliveryVHGP.WebApi.Repositories
             await context.SaveChangesAsync();
 
             return product;
-        }
+        }  
     }
 }

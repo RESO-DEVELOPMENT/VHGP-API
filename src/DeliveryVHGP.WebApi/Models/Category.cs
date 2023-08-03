@@ -17,6 +17,7 @@ namespace DeliveryVHGP.WebApi.Models
         public string? CreateAt { get; set; }
         public string? UpdateAt { get; set; }
         public string? Status { get; set; }
+        public int? Priority { get; set; }
 
         public virtual ICollection<CategoryInMenu> CategoryInMenus { get; set; }
         public virtual ICollection<Product> Products { get; set; }
