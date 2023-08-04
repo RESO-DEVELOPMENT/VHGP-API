@@ -27,6 +27,7 @@ namespace DeliveryVHGP.WebApi.Models
         public bool? Active { get; set; }
         public double? ShipCost { get; set; }
         public int? Priority { get; set; }
+        public string? Status { get; set; }
 
         public virtual ICollection<CategoryInMenu> CategoryInMenus { get; set; }
         public virtual ICollection<DeliveryTimeFrame> DeliveryTimeFrames { get; set; }

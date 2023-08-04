@@ -357,6 +357,8 @@ namespace DeliveryVHGP.WebApi.Models
                 entity.Property(e => e.BuildingId).HasMaxLength(50);
 
                 entity.Property(e => e.Name).HasMaxLength(255);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
             });
 
             modelBuilder.Entity<Menu>(entity =>
@@ -378,6 +380,8 @@ namespace DeliveryVHGP.WebApi.Models
                 entity.Property(e => e.SaleMode).HasMaxLength(50);
 
                 entity.Property(e => e.StartDate).HasMaxLength(20);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
             });
 
             modelBuilder.Entity<Notification>(entity =>
@@ -875,6 +879,8 @@ namespace DeliveryVHGP.WebApi.Models
                 entity.Property(e => e.LicensePlates).HasMaxLength(50);
 
                 entity.Property(e => e.Phone).HasMaxLength(50);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
 
                 entity.Property(e => e.UpdateAt).HasMaxLength(50);
 

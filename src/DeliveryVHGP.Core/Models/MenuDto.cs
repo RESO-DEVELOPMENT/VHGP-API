@@ -14,6 +14,7 @@
         public string? ModeId { get; set; }
         public double? ShipCost { get; set; }
         public int? Priority { get; set; }
+        public string? Status { get; set; }
         public List<string>? listCategory { get; set; }
     }
 }

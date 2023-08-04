@@ -4,6 +4,7 @@ using DeliveryVHGP.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
+using DeliveryVHGP.Core.Enums;
 
 namespace DeliveryVHGP.WebApi.Repositories
 {
@@ -22,6 +23,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                     Id = x.Id,
                     Name = x.Name,
                     BuildingId = x.BuildingId,
+                    Status = x.Status,
                 }).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return newHub;
         }
@@ -37,7 +39,13 @@ namespace DeliveryVHGP.WebApi.Repositories
         }
         public async Task<HubDto> CreateHub(HubDto hub)
         {
-            context.Hubs.Add(new Hub { Id = Guid.NewGuid().ToString(), Name = hub.Name, BuildingId = hub.BuildingId});
+            context.Hubs.Add(new Hub 
+                { 
+                    Id = Guid.NewGuid().ToString(),     
+                    Name = hub.Name, 
+                    BuildingId = hub.BuildingId,
+                    Status = hub.Status,
+                });
 
             await context.SaveChangesAsync();
             return hub;
@@ -61,6 +69,17 @@ namespace DeliveryVHGP.WebApi.Repositories
             result.Id = hub.Id;
             result.Name = hub.Name;
             result.BuildingId = hub.BuildingId;
+
+            HubStatus newHubStatus;
+
+            if(Enum.TryParse(hub.Status,out newHubStatus))
+            {
+                result.Status = newHubStatus.ToString();
+            }
+            else
+            {
+                result.Status = HubStatus.Active.ToString();
+            }
 
             context.Entry(result).State = EntityState.Modified;
             try

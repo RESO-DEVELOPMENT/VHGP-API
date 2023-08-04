@@ -105,7 +105,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                     DeliveryTeam = ship.DeliveryTeam,
                     Image = await _fileService.UploadFile(fileImg, ship.Image),
                     LicensePlates = ship.LicensePlates,
-                    Status = true,
+                    //create new shipper default active
+                    Status = ShipperStatus.Active.ToString(),
                     Colour = ship.Colour,
                     CreateAt = time
                 });
@@ -148,6 +149,11 @@ namespace DeliveryVHGP.WebApi.Repositories
             var result = await context.Shippers.FindAsync(shipId);
             var account = context.Accounts.FirstOrDefault(x => x.Id == shipId);
 
+            if(result == null)
+            {
+                return null;
+            }
+
             result.Id = shipId;
             result.FullName = ship.FullName;
             result.Phone = ship.Phone;
@@ -160,9 +166,21 @@ namespace DeliveryVHGP.WebApi.Repositories
             {
                 result.Image = await _fileService.UploadFile(fileImg, ship.Image);
             }
+
             account.Password = ship.Password;
             account.Name = ship.FullName;
             result.UpdateAt = time;
+
+            ShipperStatus newShipperStatus;
+
+            if (Enum.TryParse(ship.Status, out newShipperStatus))
+            {
+                result.Status = newShipperStatus.ToString();
+            } 
+            else
+            {
+                result.Status = ShipperStatus.Active.ToString();
+            }
             try
             {
                 await context.SaveChangesAsync();
