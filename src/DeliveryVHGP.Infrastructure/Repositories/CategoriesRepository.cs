@@ -45,6 +45,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                    Image = x.Image,
                                    CreateAt = x.CreateAt,
                                    UpdateAt = x.UpdateAt,
+                                   Status = x.Status,
                                }).FirstOrDefaultAsync();
             return cate;
         }
@@ -63,6 +64,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                        CreateAt = cate.CreateAt,
                                        UpdateAt = cate.UpdateAt,
                                        Priority = cate.Priority,
+                                       Status = cate.Status,
                                    }).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return listCate;
         }

@@ -6,6 +6,7 @@ using DeliveryVHGP.Core.Interface.IRepositories;
 using DeliveryVHGP.Core.Models;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using DeliveryVHGP.Infrastructure.Services;
+using Google.Rpc;
 using Microsoft.EntityFrameworkCore;
 using static DeliveryVHGP.Core.Models.OrderAdminDto;
 
@@ -729,13 +730,22 @@ namespace DeliveryVHGP.WebApi.Repositories
         public async Task<OrderDto> CreatNewOrder(OrderDto order)
         {
             var listProductId = order.OrderDetail.Select(x => x.ProductId);
+            if(listProductId == null)
+            {
+                throw new Exception();
+            }
+            var menu = context.Menus.FirstOrDefault(m => m.Id.Equals(order.MenuId));
+            if(menu == null)
+            {
+                throw new Exception("Menu không tồn tại hoặc không tìm thấy menu");
+            }
             foreach (var proId in listProductId)
             {
-                var pro = await (from menu in context.Menus
+                var pro =  await (from m in context.Menus
                                  join pm in context.ProductInMenus on menu.Id equals pm.MenuId
                                  join product in context.Products on pm.ProductId equals product.Id
                                  join sto in context.Stores on product.StoreId equals sto.Id
-                                 where menu.Id == order.MenuId && product.Id == proId && sto.Status == true
+                                 where menu.Id.Equals(order.MenuId) && product.Id.Equals(proId) && sto.Status == true
                                  select product.Id
                                  ).FirstOrDefaultAsync();
                 if (pro == null)
@@ -839,7 +849,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             }
             catch
             {
-                throw new Exception("Tạo đơn hàng không thành công");
+                throw new Exception();
             }
 
             return order;

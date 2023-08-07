@@ -86,7 +86,6 @@ namespace DeliveryVHGP.WebApi.Repositories
                                          Status = ship.Status,
                                          CreateAt = ship.CreateAt,
                                          UpdateAt = ship.UpdateAt,
-
                                      }).OrderByDescending(t => t.CreateAt).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return listShipper;
         }
