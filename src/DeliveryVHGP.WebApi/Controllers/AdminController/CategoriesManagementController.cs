@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using DeliveryVHGP.Core.Interfaces;
 using DeliveryVHGP.Core.Models;
+using DeliveryVHGP.Core.Enums;
 
 namespace DeliveryVHGP.WebApi.Controllers
 {
@@ -61,13 +62,13 @@ namespace DeliveryVHGP.WebApi.Controllers
         {
             try
             {
-                category.Status ="999";
+                category.Status = CategoryStatus.Active.ToString();
                 var result = await repository.Category.CreateCategory(category);
                 return Ok(result);
             }
-            catch
+            catch(Exception ex) 
             {
-                return Conflict();
+                return Conflict("Kiểm tra lại các trường đã nhập");
             }
         }
         /// <summary>

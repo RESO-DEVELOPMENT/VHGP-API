@@ -12,11 +12,12 @@
         public string? VehicleType { get; set; }
         public string? LicensePlates { get; set; }
         public string? Colour { get; set; }
+        public string? Status { get; set; }
 
     }
     public class StatusShipDto
     {
         public string Id { get; set; } = null!;
-        public bool? Status { get; set; }
+        public string? Status { get; set; }
     }
 }

@@ -24,8 +24,9 @@ namespace DeliveryVHGP.WebApi.Models
         public double? StartHour { get; set; }
         public double? EndHour { get; set; }
         public string? SaleMode { get; set; }
+        public string? Status { get; set; }
+        public double? ShipCost { get; set; }
         public int? Priority { get; set; }
-        public bool? Active { get; set; }
 
         public virtual ICollection<CategoryInMenu> CategoryInMenus { get; set; }
         public virtual ICollection<DeliveryTimeFrame> DeliveryTimeFrames { get; set; }

@@ -37,7 +37,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                         SaleMode = "3",
                         Priority = 1,
                         ShipCost = 15000,
-                        Active = true
+                        //Active = true
                     };
                     var listCate = await context.Categories.ToListAsync();
                     if (listCate.Any())
@@ -770,7 +770,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                 SaleMode = menu.ModeId,
                 Priority = menu.Priority,
                 ShipCost = menu.ShipCost,
-                Active = true
+                Status = menu.Status,
+                //Active = true
             };
             foreach (var category in menu.listCategory)
             {

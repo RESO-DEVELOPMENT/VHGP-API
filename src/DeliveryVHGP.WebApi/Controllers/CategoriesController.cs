@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using DeliveryVHGP.Core.Interfaces;
 using DeliveryVHGP.Core.Models;
+using DeliveryVHGP.Core.Enums;
 
 namespace DeliveryVHGP.WebApi.Controllers
 {
@@ -25,6 +26,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             return Ok(await repository.Category.GetAll(pageIndex, pageSize));
         }
 
+
         /// <summary>
         /// Get list Category in a menu
         /// </summary>
@@ -35,6 +37,6 @@ namespace DeliveryVHGP.WebApi.Controllers
             
         }
 
-     
+ 
     }
 }

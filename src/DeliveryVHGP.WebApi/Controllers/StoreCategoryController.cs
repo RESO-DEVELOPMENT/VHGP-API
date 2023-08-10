@@ -28,18 +28,9 @@ namespace DeliveryVHGP.WebApi.Controllers
         //POST: api/v1/storeCategory
         [HttpPost]
         public async Task<ActionResult> CreateStoreCategory(StoreCategoryDto storeCate)
-        {
-            try
-            {
+        { 
                 var result = await repository.StoreCategory.CreateStoreCategory(storeCate);
-                return Ok(result);
-            }
-            catch
-            {
-                return Conflict();
-            }
-
-
+                return Ok(result);          
         }
 
     }

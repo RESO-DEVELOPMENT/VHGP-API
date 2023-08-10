@@ -23,5 +23,6 @@
         public string? CreateAt { get; set; }
         public string? UpdateAt { get; set; }
         public bool? Status { get; set; }
+        public int? Priority { get; set; }
     }
 }

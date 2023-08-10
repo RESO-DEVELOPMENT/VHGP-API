@@ -10,6 +10,7 @@ namespace DeliveryVHGP.Core.Entities
         public string? MenuId { get; set; }
         public string? ProductId { get; set; }
         public bool? Status { get; set; }
+        public int? Priority { get; set; }
 
         public virtual Menu? Menu { get; set; }
         public virtual Product? Product { get; set; }

@@ -77,20 +77,13 @@ namespace DeliveryVHGP.WebApi.Controllers
         //PUT: api/v1/Hub?id
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateHub(string id, HubModels hub)
-        {
-            try
-            {
+        {       
                 if (id != hub.Id)
                 {
                     return BadRequest("Hub ID mismatch");
                 }
                 var HubToUpdate = await repository.Hub.UpdateHubById(id, hub);
-                return Ok(hub);
-            }
-            catch
-            {
-                return Conflict();
-            }
+                return Ok(hub);          
         }
     }
 }

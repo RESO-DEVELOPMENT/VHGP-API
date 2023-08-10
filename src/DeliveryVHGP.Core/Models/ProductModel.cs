@@ -15,6 +15,7 @@
         public string? CategoryId { get; set; }
         public double? Rate { get; set; }
         public string? Description { get; set; }
+        public int? Priority { get; set; }
         //public string? CreateAt { get; set; }
         //public string? UpdateAt { get; set; }
 
