@@ -9,10 +9,12 @@ namespace DeliveryVHGP.WebApi.Controllers
     public class RoutesController : ControllerBase
     {
         private readonly IRepositoryWrapper repository;
+
         public RoutesController(IRepositoryWrapper repository)
         {
             this.repository = repository;
         }
+
         /// <summary>
         /// Get all routes(not assign and todo)
         /// </summary>
@@ -22,27 +24,17 @@ namespace DeliveryVHGP.WebApi.Controllers
             var routes = await repository.RouteAction.GetCurrentAvalableRoute();
             return Ok(routes);
         }
+
         /// <summary>
         /// Shipper accept a route
         /// </summary>
         [HttpGet("{routeId}/accept")]
         public async Task<ActionResult> AcceptRoute(string routeId, string shipperId)
         {
-            try
-            {
-                await repository.RouteAction.AcceptRouteByShipper(routeId, shipperId);
-                return Ok(new { StatusCode = "Successful", data = 1 });
-            }
-            catch (Exception e)
-            {
-                return Ok(new
-                {
-                    StatusCode = "Fail",
-                    message = e.Message
-                });
-            }
-
+            await repository.RouteAction.AcceptRouteByShipper(routeId, shipperId);
+            return Ok(new {StatusCode = "Successful", data = 1});
         }
+
         /// <summary>
         /// Get list edges in route
         /// </summary>
@@ -52,7 +44,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             try
             {
                 var listEdge = await repository.RouteAction.GetListEdgeInRoute(routeId);
-                return Ok(new { StatusCode = "Successful", data = listEdge });
+                return Ok(new {StatusCode = "Successful", data = listEdge});
             }
             catch
             {

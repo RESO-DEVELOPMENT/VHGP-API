@@ -44,15 +44,8 @@ namespace DeliveryVHGP.WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult> CreateProduct(ProductModel product)
         {
-            try
-            {
-                var result = await repository.Product.CreatNewProduct(product);
+              var result = await repository.Product.CreatNewProduct(product);
                 return Ok(result);
-            }
-            catch
-            {
-                return Conflict();
-            }
         }
         /// <summary>
         /// Update product Detail with pagination

@@ -31,12 +31,10 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Get list Category in a menu
         /// </summary>
         [HttpGet("menus")]
-        public async Task<ActionResult<List<ProductViewInList>>> GetAllProductInMenu(string menuId, int page, int pageSize)
+        public async Task<ActionResult<List<ProductViewInList>>> GetAllProductInMenu(string menuId, int page,
+            int pageSize)
         {
-            return Ok( await repository.Category.GetListCategoryByMenuId(menuId, page, pageSize));
-            
+            return Ok(await repository.Category.GetListCategoryByMenuId(menuId, page, pageSize));
         }
-
- 
     }
 }

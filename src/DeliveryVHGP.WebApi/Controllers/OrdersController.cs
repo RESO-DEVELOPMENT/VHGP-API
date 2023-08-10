@@ -1,6 +1,8 @@
 ﻿using DeliveryVHGP.Core.Entities;
+using DeliveryVHGP.Core.Enums;
 using DeliveryVHGP.Core.Interfaces;
 using DeliveryVHGP.Core.Models;
+using DeliveryVHGP.DeliveryAlgorithm;
 using DeliveryVHGP.Infrastructure.Services;
 using Google.Api;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +14,14 @@ namespace DeliveryVHGP.WebApi.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IRepositoryWrapper repository;
-        public OrdersController(IRepositoryWrapper repository)
+        private readonly IServiceProvider serviceProvider;
+
+        public OrdersController(IRepositoryWrapper repository, IServiceProvider serviceProvider)
         {
             this.repository = repository;
+            this.serviceProvider = serviceProvider;
         }
+
         /// <summary>
         /// Get list orders (customer web)
         /// </summary>
@@ -38,18 +44,21 @@ namespace DeliveryVHGP.WebApi.Controllers
             var listOder = await repository.Order.GetListOrdersByStore(storeId, pageIndex, pageSize);
             return Ok(listOder);
         }
+
         /// <summary>
         /// Get list orders by store (store web)
         /// </summary>
         // GET: api/Orders
         [HttpGet("stores/byStoreId/status/ByStatusId")]
-        public async Task<ActionResult> GetOrderByStoreByStatus(int statusId, string storeId, int pageIndex, int pageSize)
+        public async Task<ActionResult> GetOrderByStoreByStatus(int statusId, string storeId, int pageIndex,
+            int pageSize)
         {
             var listOder = await repository.Order.GetListOrdersByStoreByStatus(storeId, statusId, pageIndex, pageSize);
             if (storeId == null)
                 return NotFound();
             return Ok(listOder);
         }
+
         /// <summary>
         /// Get order by id with pagination
         /// </summary>
@@ -67,6 +76,7 @@ namespace DeliveryVHGP.WebApi.Controllers
                 return NotFound();
             }
         }
+
         /// <summary>
         /// Create a order (customer web)
         /// </summary>
@@ -77,22 +87,52 @@ namespace DeliveryVHGP.WebApi.Controllers
             try
             {
                 var result = await repository.Order.CreatNewOrder(order);
-                //var orderTask = new OrderTaskModel
-                //{
-                //    Id = Guid.NewGuid().ToString(),
-                //    OrderId = result.Id,
-                //    ShipperId = "shipper1@gmail.com",
-                //    Task = "",
-                //    Status = ""
-                //};
-                //await repository.OrderTask.CreateOrderTask(orderTask);
-       
-
                 if (result != null)
                 {
                     await repository.Segment.CreatSegment(result);
+                    // var listOrder = await repository.Order.CheckAvailableOrder();
+                    // await repository.Cache.AddOrderToCache(listOrder); //change status -> assign(not do -> test)
+                    // //---------------------------------
+                    // //Process order by mode 1
+                    // var listOrderDeliveryByFood = await repository.Cache.GetOrderFromCache(10, 1);
+                    // if (listOrderDeliveryByFood.Any())
+                    // {
+                    //     await repository.RouteAction.RemoveRouteActionNotShipper((int) RouteTypeEnum.DeliveryFood);
+                    //     var listSegment = await repository.Segment.GetSegmentAvaliable(listOrderDeliveryByFood);
+                    //     if (listSegment.Any())
+                    //     {
+                    //         int res = await repository.RouteAction.CreateSingleRoute(listSegment);
+                    //     }
+                    // }
+                    //
+                    // //Process order by mode 2, 3
+                    // ////load n order from cache -> segment -> run algorithm
+                    // var listOrderDeliveryByroute = await repository.Cache.GetOrderFromCache(35, 2);
+                    // if (listOrderDeliveryByroute.Any())
+                    // {
+                    //     //remove older route(do first)
+                    //     await repository.RouteAction.RemoveRouteActionNotShipper(
+                    //         (int) RouteTypeEnum.DeliveryRoute); // not in sequence diagram 
+                    //     var listSegment = await repository.Segment.GetSegmentAvaliable(listOrderDeliveryByroute);
+                    //     if (listSegment.Any())
+                    //     {
+                    //         DeliveryPickupAlgorithm algorithm = new DeliveryPickupAlgorithm(serviceProvider);
+                    //         algorithm.AlgorithsProcess(listSegment);
+                    //     }
+                    // }
+                    //
+                    // //Remove route and load new route in firestore
+                    // var scopeFireStore = serviceProvider.GetService<IFirestoreService>();
+                    // await scopeFireStore.DeleteAllRoutes();
+                    // List<RouteModel> ListRoute = await repository.RouteAction.GetCurrentAvalableRoute();
+                    // if (ListRoute.Count > 0)
+                    //     foreach (var routeModel in ListRoute)
+                    //     {
+                    //         await scopeFireStore.AddRoute(routeModel);
+                    //     }
                 }
-                return Ok(new { StatusCode = "Successful", data = result });
+
+                return Ok(new {StatusCode = "Successful", data = result});
             }
             catch (Exception ex)
             {
@@ -103,6 +143,7 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
         /// <remarks>
         /// Status in body
         /// CreateOrder = 1, ShipAccept = 2, Shipping = 3, Done = 4, Cancel = 5, ShipCancel = 6, ShipCancelOther = 7, ShopCancel = 8, CustomerCancel = 9, CustomerPayCancel = 10
@@ -118,10 +159,12 @@ namespace DeliveryVHGP.WebApi.Controllers
             {
                 return BadRequest("Order Id mismatch");
             }
+
             if (order.OrderId == null)
             {
                 return NotFound("Order Id does not exist");
             }
+
             try
             {
                 await repository.Order.OrderUpdateStatus(orderId, order.StatusId);
@@ -130,8 +173,10 @@ namespace DeliveryVHGP.WebApi.Controllers
             {
                 return Conflict(ex.Message);
             }
+
             return Ok(order);
         }
+
         /// <summary>
         /// Get TimeDuration By MenuId in Mode3 (customer web)
         /// </summary>
@@ -141,6 +186,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         {
             return Ok(await repository.Order.GetDurationOrder(menuId, pageIndex, pageSize));
         }
+
         /// <summary>
         /// Get order by id with pagination
         /// </summary>
@@ -159,11 +205,12 @@ namespace DeliveryVHGP.WebApi.Controllers
                 return Ok(new
                 {
                     StatusCode = "Fail",
-                    message = "Loại hình thanh toán của đơn hàng không hợp lệ !! Vui lòng kiểm tra và thử lại"
+                    message =
+                        "Loại hình thanh toán của đơn hàng không hợp lệ !! Vui lòng kiểm tra và thử lại"
                 });
             }
         }
-        
+
         /// <summary>
         /// None
         /// </summary>
@@ -171,7 +218,6 @@ namespace DeliveryVHGP.WebApi.Controllers
         [HttpGet("Payment-confirm")]
         public async Task<ActionResult> GetPaymentConfirm()
         {
-
             string hashSecret = "YLGGIJRNXHISHHCZSMHXFRVXUTJIFMSZ"; //Chuỗi bí mật
             VnPayLibrary pay = new VnPayLibrary();
             var vnpayData = Request.QueryString.ToString();
@@ -192,7 +238,6 @@ namespace DeliveryVHGP.WebApi.Controllers
 
             foreach (string author in authorsList)
             {
-
                 string[] ListRespone = author.Split("=");
                 if (ListRespone[0] == "?vnp_Amount")
                 {
@@ -238,22 +283,28 @@ namespace DeliveryVHGP.WebApi.Controllers
                 {
                     vnp_TxnRef = ListRespone[1];
                 }
-
             }
 
 
             string vnp_SecureHash = Request.Query["vnp_SecureHash"]; //hash của dữ liệu trả về
 
-            string hashRaw = "vnp_Amount=" + vnp_Amount + "&" + "vnp_BankCode=" + vnp_BankCode + "&" + "vnp_BankTranNo=" + vnp_BankTranNo + "&" + "vnp_CardType=" +
-                vnp_CardType + "&" + "vnp_OrderInfo=" + vnp_OrderInfo + "&" + "vnp_PayDate=" + vnp_PayDate + "&" + "vnp_ResponseCode=" + vnp_ResponseCode + "&" + "vnp_TmnCode=" + vnp_TmnCode + "&" + "vnp_TransactionNo=" + vnp_TransactionNo +
-                "&" + "vnp_TransactionStatus=" + vnp_TransactionStatus + "&" + "vnp_TxnRef=" + vnp_TxnRef;
+            string hashRaw = "vnp_Amount=" + vnp_Amount + "&" + "vnp_BankCode=" + vnp_BankCode + "&" +
+                             "vnp_BankTranNo=" + vnp_BankTranNo + "&" + "vnp_CardType=" +
+                             vnp_CardType + "&" + "vnp_OrderInfo=" + vnp_OrderInfo + "&" + "vnp_PayDate=" +
+                             vnp_PayDate + "&" + "vnp_ResponseCode=" + vnp_ResponseCode + "&" + "vnp_TmnCode=" +
+                             vnp_TmnCode + "&" + "vnp_TransactionNo=" + vnp_TransactionNo +
+                             "&" + "vnp_TransactionStatus=" + vnp_TransactionStatus + "&" + "vnp_TxnRef=" + vnp_TxnRef;
 
             Console.WriteLine("vnp_ResponseCode" + vnp_ResponseCode);
-            bool checkSignature = pay.ValidateSignature(vnp_SecureHash, hashSecret, hashRaw); //check chữ ký đúng hay không?
+            bool checkSignature =
+                pay.ValidateSignature(vnp_SecureHash, hashSecret, hashRaw); //check chữ ký đúng hay không?
 
-            string hashRaw2 = "vnp_Amount=" + vnp_Amount + "&" + "vnp_BankCode=" + vnp_BankCode + "&" + "vnp_BankTranNo=" + vnp_BankTranNo + "&" + "vnp_CardType=" +
-                vnp_CardType + "&" + "vnp_OrderInfo=" + vnp_OrderInfo + "&" + "vnp_PayDate=" + vnp_PayDate + "&" + "vnp_ResponseCode=" + vnp_ResponseCode + "&" + "vnp_TmnCode=" + vnp_TmnCode + "&" + "vnp_TransactionNo=" + vnp_TransactionNo +
-                "&" + "vnp_TransactionStatus=" + vnp_TransactionStatus + "&" + "vnp_TxnRef=" + vnp_TxnRef;
+            string hashRaw2 = "vnp_Amount=" + vnp_Amount + "&" + "vnp_BankCode=" + vnp_BankCode + "&" +
+                              "vnp_BankTranNo=" + vnp_BankTranNo + "&" + "vnp_CardType=" +
+                              vnp_CardType + "&" + "vnp_OrderInfo=" + vnp_OrderInfo + "&" + "vnp_PayDate=" +
+                              vnp_PayDate + "&" + "vnp_ResponseCode=" + vnp_ResponseCode + "&" + "vnp_TmnCode=" +
+                              vnp_TmnCode + "&" + "vnp_TransactionNo=" + vnp_TransactionNo +
+                              "&" + "vnp_TransactionStatus=" + vnp_TransactionStatus + "&" + "vnp_TxnRef=" + vnp_TxnRef;
 
             Console.WriteLine("checkSignature" + checkSignature);
             Console.WriteLine("vnp_TxnRef" + vnp_TxnRef);
@@ -272,7 +323,6 @@ namespace DeliveryVHGP.WebApi.Controllers
                     string Failed = "https://foodd-delivery.netlify.app/order/payment/failed";
                     return Redirect(Failed);
                 }
-
             }
             else
             {
@@ -280,15 +330,17 @@ namespace DeliveryVHGP.WebApi.Controllers
                 string Failed = "https://foodd-delivery.netlify.app/order/payment/failed";
                 return Redirect(Failed);
             }
+
             return Ok();
         }
+
         [HttpPut("complete")]
         public async Task<ActionResult> CompleteOrder(string orderActionId, string shipperId, int actionType)
         {
             try
             {
                 await repository.Order.CompleteOrder(orderActionId, shipperId, actionType);
-                return Ok(new { StatusCode = "Successful" });
+                return Ok(new {StatusCode = "Successful"});
             }
             catch (Exception e)
             {
@@ -299,13 +351,15 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
         [HttpPut("cancel")]
-        public async Task<ActionResult> CancelOrder(string orderActionId, string shipperId, int actionType, string messageFail)
+        public async Task<ActionResult> CancelOrder(string orderActionId, string shipperId, int actionType,
+            string messageFail)
         {
             try
             {
                 await repository.Order.CancelOrder(orderActionId, shipperId, actionType, messageFail);
-                return Ok(new { StatusCode = "Successful" });
+                return Ok(new {StatusCode = "Successful"});
             }
             catch (Exception e)
             {
@@ -316,13 +370,14 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
         [HttpPut("admin/cancel")]
         public async Task<ActionResult> CancelOrderByAdmin(string orderId, int orderStatus, string messageFail)
         {
             try
             {
                 await repository.Order.CancelOrderByAdmin(orderId, orderStatus, messageFail);
-                return Ok(new { StatusCode = "Successful" });
+                return Ok(new {StatusCode = "Successful"});
             }
             catch (Exception e)
             {
@@ -333,13 +388,14 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
         [HttpPut("store/cancel")]
         public async Task<ActionResult> CancelOrderByStore(string orderId, string messageFail)
         {
             try
             {
                 await repository.Order.CancelOrderByStore(orderId, messageFail);
-                return Ok(new { StatusCode = "Successful" });
+                return Ok(new {StatusCode = "Successful"});
             }
             catch (Exception e)
             {
@@ -350,13 +406,15 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
         [HttpGet("history")]
-        public async Task<ActionResult<List<ShipperHistoryModel>>> GetShipperHistory(string shipperId, int status, int page, int pageSize)
+        public async Task<ActionResult<List<ShipperHistoryModel>>> GetShipperHistory(string shipperId, int status,
+            int page, int pageSize)
         {
             try
             {
                 var histories = await repository.ShipperHistory.GetShipperHistories(shipperId, status, page, pageSize);
-                return Ok(new { StatusCode = "Successful", data = histories });
+                return Ok(new {StatusCode = "Successful", data = histories});
             }
             catch (Exception e)
             {
@@ -367,13 +425,14 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
         [HttpGet("history/detail")]
         public async Task<ActionResult<HistoryDetail>> GetShipperHistoryDetail(string shipperHistoryId)
         {
             try
             {
                 var histories = await repository.ShipperHistory.GetShipperHistoryDetail(shipperHistoryId);
-                return Ok(new { StatusCode = "Successful", data = histories });
+                return Ok(new {StatusCode = "Successful", data = histories});
             }
             catch (Exception e)
             {
@@ -384,7 +443,7 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
-        
+
         [HttpGet("shipperId")]
         public async Task<ActionResult> GetOrderTaskByShipper(string shipperId)
         {
@@ -392,7 +451,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             {
                 var pro = await repository.OrderTask.GetOrderTaskByShipper(shipperId);
 
-                return Ok(new { StatusCode = "Successful", data = pro });
+                return Ok(new {StatusCode = "Successful", data = pro});
             }
             catch (Exception e)
             {
@@ -403,6 +462,5 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
-
     }
 }
