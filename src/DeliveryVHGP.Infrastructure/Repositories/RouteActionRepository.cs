@@ -23,19 +23,33 @@ namespace DeliveryVHGP.Infrastructure.Repositories
         public async Task<List<RouteModel>> GetCurrentAvalableRoute()
         {
             List<RouteModel> listRouteModel = new List<RouteModel>();
-            var listRoute = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
-                .Where(x => x.Status == (int)RouteStatusEnum.NotAssign || x.Status == (int)RouteStatusEnum.ToDo).ToListAsync();
+            var listRoute = await context.SegmentDeliveryRoutes
+                .Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
+                .Where(x => x.Status == (int)RouteStatusEnum.NotAssign || x.Status == (int)RouteStatusEnum.ToDo)
+                .ToListAsync();
             if (listRoute.Count() > 0)
             {
                 foreach (var route in listRoute)
                 {
                     double? totalAdvance = 0;
                     double? totalCod = 0;
-                    RouteModel routeModel = new RouteModel() { RouteId = route.Id, EdgeNum = route.RouteEdges.Count(), ShipperId = route.ShipperId, Type = route.Type, Status = route.Status };
-                    var first = route.RouteEdges.Where(x => x.Priority == 1).Select(x => x.ToBuildingId).FirstOrDefault();
-                    var last = route.RouteEdges.OrderByDescending(x => x.Priority).Select(x => x.ToBuildingId).FirstOrDefault();
-                    var buildingNameFirst = await context.Buildings.Where(x => x.Id == first).Select(x => x.Name).FirstOrDefaultAsync();
-                    var buildingNameLast = await context.Buildings.Where(x => x.Id == last).Select(x => x.Name).FirstOrDefaultAsync();
+                    RouteModel routeModel = new RouteModel() 
+                    { 
+                        RouteId = route.Id, 
+                        EdgeNum = route.RouteEdges.Count(), 
+                        ShipperId = route.ShipperId, 
+                        Type = route.Type, 
+                        Status = route.Status,
+                    };
+
+                    var first = route.RouteEdges
+                        .Where(x => x.Priority == 1).Select(x => x.ToBuildingId).FirstOrDefault();
+                    var last = route.RouteEdges
+                        .OrderByDescending(x => x.Priority).Select(x => x.ToBuildingId).FirstOrDefault();               
+                    var buildingNameFirst = await context.Buildings
+                        .Where(x => x.Id == first).Select(x => x.Name).FirstOrDefaultAsync();
+                    var buildingNameLast = await context.Buildings
+                        .Where(x => x.Id == last).Select(x => x.Name).FirstOrDefaultAsync();
 
                     routeModel.FirstEdge = buildingNameFirst;
                     routeModel.LastEdge = buildingNameLast;
@@ -48,35 +62,47 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                     var listOrderId = listOrderAction.Select(x => x.OrderId).ToList(); //lunavtran
                     routeModel.OrderNum = listOrderAction.Count;
 
-                    //luanvtran
-                    var listOrder = await context.Orders.Include(x => x.Payments).Where(x => listOrderId.Contains(x.Id)).ToListAsync();
+                    //query order and amount of money need to pay
+                    var listOrder = await context.Orders.Include(x => x.Payments).
+                        Where(x => listOrderId.Contains(x.Id)).ToListAsync();
                     foreach (var order in listOrder)
                     {
                         if (order.Payments.Any())
                         {
                             Console.WriteLine(order.Id + ": " + order.Payments.First().Type);
                         }
-                        totalAdvance += await context.Orders.Where(x => x.Id == order.Id).Select(x => x.Total).FirstOrDefaultAsync();
+                        //duplicate query
+                        //totalAdvance += await context.Orders.Where(x => x.Id == order.Id).Select(x => x.Total).FirstOrDefaultAsync();
                         totalAdvance += order.Total;
                         if (order.Payments.First().Type == (int)PaymentEnum.Cash)
                         {
-                            totalCod += order.Total;
+                            totalCod += order.Total + order.ShipCost;
+                            Console.WriteLine(totalCod);
                         }
                     }
-                    //
+                    
 
-                    foreach (var action in orderActions)
+                    /*foreach (var action in orderActions)
                     {
-                        var orderAction = await context.OrderActions.Include(x => x.Order).ThenInclude(x => x.Payments).Where(x => x.Id == action.Id).FirstOrDefaultAsync();
+                        var orderAction = await context.OrderActions
+                            .Include(x => x.Order).ThenInclude(x => x.Payments)
+                            .Where(x => x.Id == action.Id).FirstOrDefaultAsync();
+                        if (orderAction == null)
+                        {
+                            Console.WriteLine("Bug Right Here");
+                        }
+                        //this method will calculate order at store
                         if (action.OrderActionType == (int)OrderActionEnum.PickupStore)
                         {
                             totalAdvance += orderAction.Order.Total;
+                            Console.WriteLine(totalAdvance);
                         }
+                        //calculate order when deliveried to customer
                         if (action.OrderActionType == (int)OrderActionEnum.DeliveryCus && orderAction.Order.Payments.First().Type == (int)PaymentEnum.Cash)
                         {
                             totalCod += (orderAction.Order.Total + orderAction.Order.ShipCost);
                         }
-                    }
+                    }*/
 
                     routeModel.TotalAdvance = totalAdvance;
                     routeModel.TotalCod = totalCod;
@@ -146,7 +172,8 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                         bu2 = build.Item2 - 1;
                     }
                 }
-                edgeDelivery.Distance = DistanceMatrix.distanceMatrixData[bu1, bu2];
+                //this code using distanceMatrixData dummy data => Cause Error
+                //edgeDelivery.Distance = DistanceMatrix.distanceMatrixData[bu1, bu2];
                 totalDistance = (double)edgeDelivery.Distance;
 
                 listAction.Add(actionDelivery);
