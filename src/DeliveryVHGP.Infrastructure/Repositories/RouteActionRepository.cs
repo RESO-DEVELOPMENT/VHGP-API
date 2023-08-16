@@ -7,6 +7,8 @@ using DeliveryVHGP.Core.Models;
 using DeliveryVHGP.Core.Models.Noti;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using DeliveryVHGP.Infrastructure.Services;
+using Firebase.Database;
+using Google.Rpc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeliveryVHGP.Infrastructure.Repositories
@@ -297,12 +299,12 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             //{
             //    throw new Exception("Shipper can only accept 1 route ");
             //}
-
+            
             var route = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
                 .Where(x => x.Id == routeId && x.ShipperId == null && x.Status == (int)RouteStatusEnum.NotAssign).FirstOrDefaultAsync();
             if (route == null)
             {
-                throw new Exception("The route is not avalable");
+                throw new Exception();
             }
             route.ShipperId = shipperId;
             route.Status = (int)RouteStatusEnum.ToDo;
