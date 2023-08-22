@@ -299,12 +299,15 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             //{
             //    throw new Exception("Shipper can only accept 1 route ");
             //}
-            
+
             var route = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
                 .Where(x => x.Id == routeId && x.ShipperId == null && x.Status == (int)RouteStatusEnum.NotAssign).FirstOrDefaultAsync();
+            /*string originalRouteId = routeId;
+            var route = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
+                .Where(x => x.Id == originalRouteId && x.ShipperId == null).FirstOrDefaultAsync();*/
             if (route == null)
             {
-                throw new Exception();
+                throw new Exception("Shipper is accepted order");
             }
             route.ShipperId = shipperId;
             route.Status = (int)RouteStatusEnum.ToDo;
