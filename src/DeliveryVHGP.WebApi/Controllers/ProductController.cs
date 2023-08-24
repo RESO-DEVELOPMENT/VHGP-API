@@ -63,14 +63,9 @@ namespace DeliveryVHGP.WebApi.Controllers
                     var productToUpdate = await repository.Product.UpdateProductById(id, product);
                     return Ok(product);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return Ok(new
-                {
-                    message = "Hiện tại danh mục đang có trong menu !!" +
-                                              "Vui lòng xóa danh mục khỏi menu và thử lại "
-                });
-
+                return BadRequest($"Error: {ex.Message}");
             }
         }
         /// <summary>

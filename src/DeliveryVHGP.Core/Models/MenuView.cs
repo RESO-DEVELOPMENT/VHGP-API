@@ -8,6 +8,7 @@
         public String? DayFilter { get; set; }
         public double? StartTime { get; set; }
         public double? EndTime { get; set; }
+        public double? ShipCost { get; set; }
         public List<CategoryStoreInMenu> ListCategoryStoreInMenus { get; set; }
     }
     public class MenuNotProductView

@@ -5,7 +5,7 @@ using DeliveryVHGP.Core.Models;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using DeliveryVHGP.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
-
+using DeliveryVHGP.Core.Enums;
 namespace DeliveryVHGP.WebApi.Repositories
 {
     public class ProductRepository : RepositoryBase<Product>, IProductRepository
@@ -47,7 +47,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                                ProductCategory = c.Name,
                                                CreateAt = p.CreateAt,
                                                UpdateAt = p.UpdateAt,
-                                               Status = pm.Status,
+                                               //Status = p.Status,
                                                Priority = p.Priority,
                                            }
                                      ).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
@@ -59,7 +59,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             var listproductdetail = await (from p in context.Products
                                            join s in context.Stores on p.StoreId equals s.Id
                                            join c in context.Categories on p.CategoryId equals c.Id
-                                           join pm in context.ProductInMenus on p.Id equals pm.ProductId
+                                           /*join pm in context.ProductInMenus on p.Id equals pm.ProductId*/
                                            where s.Id == storeId
                                            select new ProductDetailsModel()
                                            {
@@ -83,6 +83,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                                ProductCategory = c.Name,
                                                CreateAt = p.CreateAt,
                                                UpdateAt = p.UpdateAt,
+                                               Status = p.Status,
                                                Priority = p.Priority,
                                            }
                                      ).OrderByDescending(t => t.Priority).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
@@ -118,6 +119,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                      ProductCategory = c.Name,
                                      CreateAt = p.CreateAt,
                                      UpdateAt = p.UpdateAt,
+                                     Status = p.Status,
                                      //Priority = p.Priority
                                  }).FirstOrDefaultAsync();
 
@@ -146,6 +148,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                     Rate = pro.Rate,
                     Description = pro.Description,
                     CreateAt = time,
+                    Status = pro.Status,
                     Priority = pro.Priority
                 });
             await context.SaveChangesAsync();
@@ -159,7 +162,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             var pro = await context.Products.FindAsync(proId);
             var store = context.Stores.FirstOrDefault(s => s.Id == product.StoreId);
             var category = context.Categories.FirstOrDefault(c => c.Id == pro.CategoryId);
-            var p = new Product();
+            //var p = new Product();
             pro.Name = product.Name;
             pro.Image = await _fileService.UploadFile(fileImg, product.Image);
             pro.Unit = product.Unit;
@@ -174,6 +177,16 @@ namespace DeliveryVHGP.WebApi.Repositories
             pro.CategoryId = product.CategoryId;
             pro.UpdateAt = time;
             pro.Priority = product.Priority;
+
+            ProductStatus newProductStatus;
+            if(Enum.TryParse(product.Status, out newProductStatus))
+            {
+                pro.Status = newProductStatus.ToString();
+            } 
+            else
+            {
+                pro.Status = ProductStatus.Active.ToString();
+            }
 
             var listProInMenu = await context.ProductInMenus.Where(pm => pm.ProductId == proId).ToListAsync();
             var listCateInMenu = await context.CategoryInMenus.Where(cm => cm.CategoryId == product.CategoryId).ToListAsync();
@@ -201,13 +214,15 @@ namespace DeliveryVHGP.WebApi.Repositories
         public async Task<Object> DeleteProductById(string id)
         {
             var product = await context.Products.FindAsync(id);
-            if (product == null)
+            if(product == null)
             {
-                return null;
+                return ("Cannot Find Product By ID");
             }
-            context.Products.Remove(product);
-            await context.SaveChangesAsync();
-
+            if (product.Status != ProductStatus.Deactive.ToString())
+            {
+                product.Status = ProductStatus.Deactive.ToString();
+                await context.SaveChangesAsync();
+            } 
             return product;
         }  
     }

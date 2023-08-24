@@ -74,24 +74,33 @@ namespace DeliveryVHGP.WebApi.Repositories
                     listDate.Add(date.Value.AddDays(i));
                 }
 
-                var listMenuMode3 = await context.Menus.Where(m => m.SaleMode == modeId && listDate.Contains(m.DayFilter.Value.Date)).OrderBy(x => x.DayFilter).Select(x => new MenuView
+                var listMenuMode3 = await context.Menus
+                    .Where(m => m.SaleMode == modeId && listDate
+                    .Contains(m.DayFilter.Value.Date))
+                    .OrderBy(x => x.DayFilter)
+                    .Select(x => new MenuView
                 {
                     Id = x.Id,
                     Image = x.Image,
                     Name = x.Name,
                     DayFilter = x.DayFilter.ToString(),
                     StartTime = x.StartHour,
-                    EndTime = x.EndHour
+                    EndTime = x.EndHour,
+                    ShipCost = x.ShipCost,
                 }).ToListAsync();
                 return listMenuMode3;
             }
-            var listMenu = await context.Menus.Where(m => m.SaleMode == modeId).OrderBy(x => x.StartHour).Select(x => new MenuView
+            var listMenu = await context.Menus
+                .Where(m => m.SaleMode == modeId)
+                .OrderBy(x => x.StartHour)
+                .Select(x => new MenuView
             {
                 Id = x.Id,
                 Image = x.Image,
                 Name = x.Name,
                 StartTime = x.StartHour,
-                EndTime = x.EndHour
+                EndTime = x.EndHour,
+                ShipCost = x.ShipCost,
             }).ToListAsync();
             return listMenu;
         }
