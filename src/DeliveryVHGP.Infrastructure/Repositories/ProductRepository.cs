@@ -214,13 +214,15 @@ namespace DeliveryVHGP.WebApi.Repositories
         public async Task<Object> DeleteProductById(string id)
         {
             var product = await context.Products.FindAsync(id);
-            if (product == null)
+            if(product == null)
             {
-                return null;
+                return ("Cannot Find Product By ID");
             }
-            context.Products.Remove(product);
-            await context.SaveChangesAsync();
-
+            if (product.Status != ProductStatus.Deactive.ToString())
+            {
+                product.Status = ProductStatus.Deactive.ToString();
+                await context.SaveChangesAsync();
+            } 
             return product;
         }  
     }
