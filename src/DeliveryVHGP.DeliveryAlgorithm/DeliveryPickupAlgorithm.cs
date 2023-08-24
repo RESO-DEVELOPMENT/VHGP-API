@@ -169,7 +169,7 @@ namespace DeliveryVHGP.DeliveryAlgorithm
                     totalRouteDistance += routeDistance;
                     route.Distance = totalRouteDistance;
                     route.RouteEdges = listEdge;
-                    if (totalRouteDistance > 0)
+                    if (totalRouteDistance >= 0)
                     {
                         listRoute.Add(route);
                         NodeAction.AddRange(listNode);
