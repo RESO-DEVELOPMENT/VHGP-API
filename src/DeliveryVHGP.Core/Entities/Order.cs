@@ -10,7 +10,6 @@ namespace DeliveryVHGP.Core.Entities
             OrderActionHistories = new HashSet<OrderActionHistory>();
             OrderActions = new HashSet<OrderAction>();
             OrderDetails = new HashSet<OrderDetail>();
-            OrderTasks = new HashSet<OrderTask>();
             Payments = new HashSet<Payment>();
             Segments = new HashSet<Segment>();
             ShipperHistories = new HashSet<ShipperHistory>();
@@ -36,11 +35,11 @@ namespace DeliveryVHGP.Core.Entities
         public virtual Menu? Menu { get; set; }
         public virtual Service? Service { get; set; }
         public virtual Store? Store { get; set; }
+        public virtual Feedback? Feedback { get; set; }
         public virtual OrderCache? OrderCache { get; set; }
         public virtual ICollection<OrderActionHistory> OrderActionHistories { get; set; }
         public virtual ICollection<OrderAction> OrderActions { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
-        public virtual ICollection<OrderTask> OrderTasks { get; set; }
         public virtual ICollection<Payment> Payments { get; set; }
         public virtual ICollection<Segment> Segments { get; set; }
         public virtual ICollection<ShipperHistory> ShipperHistories { get; set; }

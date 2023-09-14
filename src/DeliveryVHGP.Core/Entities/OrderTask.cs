@@ -5,7 +5,7 @@ namespace DeliveryVHGP.Core.Entities
 {
     public partial class OrderTask
     {
-        public string Id { get; set; } = null!;
+        public string? Id { get; set; }
         public string? OrderId { get; set; }
         public string? ShipperId { get; set; }
         public string? Task { get; set; }
