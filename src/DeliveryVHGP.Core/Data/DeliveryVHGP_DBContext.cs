@@ -31,6 +31,7 @@ namespace DeliveryVHGP.Core.Data
         public virtual DbSet<DeliveryShiftOfShipper> DeliveryShiftOfShippers { get; set; } = null!;
         public virtual DbSet<DeliveryTimeFrame> DeliveryTimeFrames { get; set; } = null!;
         public virtual DbSet<FcmToken> FcmTokens { get; set; } = null!;
+        public virtual DbSet<Feedback> Feedbacks { get; set; } = null!;
         public virtual DbSet<Hub> Hubs { get; set; } = null!;
         public virtual DbSet<Menu> Menus { get; set; } = null!;
         public virtual DbSet<Notification> Notifications { get; set; } = null!;
@@ -66,7 +67,8 @@ namespace DeliveryVHGP.Core.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Name=MyConnectionString");
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+                optionsBuilder.UseSqlServer("Server=120.72.85.82,9033;Database=VHGP;User Id=sa;Password=f0^wyhMfl*25;Encrypt=True;TrustServerCertificate=True");
             }
         }
 
@@ -77,6 +79,11 @@ namespace DeliveryVHGP.Core.Data
                 entity.ToTable("Account");
 
                 entity.Property(e => e.Id).HasMaxLength(50);
+
+                entity.Property(e => e.ImageUrl)
+                    .HasMaxLength(1000)
+                    .IsUnicode(false)
+                    .HasColumnName("imageUrl");
 
                 entity.Property(e => e.Name).HasMaxLength(100);
 
@@ -97,7 +104,7 @@ namespace DeliveryVHGP.Core.Data
             modelBuilder.Entity<AccountBuilding>(entity =>
             {
                 entity.HasKey(e => e.AccountBuildId)
-                    .HasName("PK__AccountB__5659C746B7B24746");
+                    .HasName("PK__AccountB__5659C74659A31B2C");
 
                 entity.ToTable("AccountBuilding");
 
@@ -105,11 +112,9 @@ namespace DeliveryVHGP.Core.Data
 
                 entity.Property(e => e.BuildingId).HasMaxLength(50);
 
-                entity.Property(e => e.Name).HasMaxLength(200);
+                entity.Property(e => e.Name).HasMaxLength(500);
 
-                entity.Property(e => e.SoDienThoai)
-                    .HasMaxLength(10)
-                    .IsUnicode(false);
+                entity.Property(e => e.SoDienThoai).HasMaxLength(500);
 
                 entity.HasOne(d => d.Account)
                     .WithMany(p => p.AccountBuildings)
@@ -149,6 +154,8 @@ namespace DeliveryVHGP.Core.Data
                 entity.Property(e => e.Image).HasMaxLength(255);
 
                 entity.Property(e => e.Name).HasMaxLength(255);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
             });
 
             modelBuilder.Entity<Building>(entity =>
@@ -213,7 +220,6 @@ namespace DeliveryVHGP.Core.Data
                 entity.HasOne(d => d.Menu)
                     .WithMany(p => p.CategoryInMenus)
                     .HasForeignKey(d => d.MenuId)
-                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_CategoryInMenu_Menu");
             });
 
@@ -344,6 +350,26 @@ namespace DeliveryVHGP.Core.Data
                     .HasConstraintName("FK_FcmToken_Account");
             });
 
+            modelBuilder.Entity<Feedback>(entity =>
+            {
+                entity.ToTable("Feedback");
+
+                entity.HasIndex(e => e.OrderId, "IX_Feedback")
+                    .IsUnique();
+
+                entity.Property(e => e.Id).HasMaxLength(50);
+
+                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.Property(e => e.OrderId).HasMaxLength(50);
+
+                entity.HasOne(d => d.Order)
+                    .WithOne(p => p.Feedback)
+                    .HasForeignKey<Feedback>(d => d.OrderId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Feedback_Order");
+            });
+
             modelBuilder.Entity<Hub>(entity =>
             {
                 entity.ToTable("Hub");
@@ -353,6 +379,8 @@ namespace DeliveryVHGP.Core.Data
                 entity.Property(e => e.BuildingId).HasMaxLength(50);
 
                 entity.Property(e => e.Name).HasMaxLength(255);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
             });
 
             modelBuilder.Entity<Menu>(entity =>
@@ -374,6 +402,8 @@ namespace DeliveryVHGP.Core.Data
                 entity.Property(e => e.SaleMode).HasMaxLength(50);
 
                 entity.Property(e => e.StartDate).HasMaxLength(20);
+
+                entity.Property(e => e.Status).HasMaxLength(20);
             });
 
             modelBuilder.Entity<Notification>(entity =>
@@ -428,9 +458,7 @@ namespace DeliveryVHGP.Core.Data
 
                 entity.Property(e => e.MenuId).HasMaxLength(50);
 
-                entity.Property(e => e.MessageFail)
-                    .HasMaxLength(350)
-                    .HasColumnName("messageFail");
+                entity.Property(e => e.MessageFail).HasMaxLength(350);
 
                 entity.Property(e => e.Note).HasMaxLength(500);
 
@@ -453,7 +481,6 @@ namespace DeliveryVHGP.Core.Data
                 entity.HasOne(d => d.Menu)
                     .WithMany(p => p.Orders)
                     .HasForeignKey(d => d.MenuId)
-                    .OnDelete(DeleteBehavior.SetNull)
                     .HasConstraintName("FK_Order_Menu");
 
                 entity.HasOne(d => d.Service)
@@ -515,7 +542,7 @@ namespace DeliveryVHGP.Core.Data
             {
                 entity.ToTable("OrderCache");
 
-                entity.HasIndex(e => e.OrderId, "UQ__OrderCac__C3905BCEF6F86C79")
+                entity.HasIndex(e => e.OrderId, "UQ__OrderCac__C3905BCEA76F0804")
                     .IsUnique();
 
                 entity.Property(e => e.Id).HasMaxLength(50);
@@ -555,6 +582,8 @@ namespace DeliveryVHGP.Core.Data
 
             modelBuilder.Entity<OrderTask>(entity =>
             {
+                entity.HasNoKey();
+
                 entity.ToTable("OrderTask");
 
                 entity.Property(e => e.Id).HasMaxLength(50);
@@ -568,12 +597,12 @@ namespace DeliveryVHGP.Core.Data
                 entity.Property(e => e.Task).HasMaxLength(50);
 
                 entity.HasOne(d => d.Order)
-                    .WithMany(p => p.OrderTasks)
+                    .WithMany()
                     .HasForeignKey(d => d.OrderId)
                     .HasConstraintName("FK_OrderTask_Order");
 
                 entity.HasOne(d => d.Shipper)
-                    .WithMany(p => p.OrderTasks)
+                    .WithMany()
                     .HasForeignKey(d => d.ShipperId)
                     .HasConstraintName("FK_OrderTask_Shipper");
             });
@@ -665,7 +694,6 @@ namespace DeliveryVHGP.Core.Data
                 entity.HasOne(d => d.Menu)
                     .WithMany(p => p.ProductInMenus)
                     .HasForeignKey(d => d.MenuId)
-                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_ProductInMenu_Menu");
 
                 entity.HasOne(d => d.Product)
@@ -803,7 +831,6 @@ namespace DeliveryVHGP.Core.Data
                 entity.HasOne(d => d.Shipper)
                     .WithMany(p => p.SegmentDeliveryRoutes)
                     .HasForeignKey(d => d.ShipperId)
-                    .OnDelete(DeleteBehavior.SetNull)
                     .HasConstraintName("FK_SegmentDeliveryRoute_Shipper");
             });
 
@@ -875,6 +902,8 @@ namespace DeliveryVHGP.Core.Data
 
                 entity.Property(e => e.Phone).HasMaxLength(50);
 
+                entity.Property(e => e.Status).HasMaxLength(20);
+
                 entity.Property(e => e.UpdateAt).HasMaxLength(50);
 
                 entity.Property(e => e.VehicleType).HasMaxLength(50);
@@ -900,7 +929,6 @@ namespace DeliveryVHGP.Core.Data
                 entity.HasOne(d => d.Shipper)
                     .WithMany(p => p.ShipperHistories)
                     .HasForeignKey(d => d.ShipperId)
-                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_ShipperHistory_Shipper");
             });
 
@@ -920,7 +948,7 @@ namespace DeliveryVHGP.Core.Data
 
                 entity.Property(e => e.CreditAccount).HasMaxLength(100);
 
-                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.Description).HasMaxLength(500);
 
                 entity.Property(e => e.Image).HasMaxLength(250);
 
@@ -984,7 +1012,6 @@ namespace DeliveryVHGP.Core.Data
                 entity.HasOne(d => d.Menu)
                     .WithMany(p => p.StoreInMenus)
                     .HasForeignKey(d => d.MenuId)
-                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("FK_StoreInMenu_Menu");
 
                 entity.HasOne(d => d.Store)

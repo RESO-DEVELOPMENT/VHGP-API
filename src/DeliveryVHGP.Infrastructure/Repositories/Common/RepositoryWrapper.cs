@@ -1,4 +1,5 @@
 ﻿using DeliveryVHGP.Core.Data;
+using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Core.Interface.IRepositories;
 using DeliveryVHGP.Core.Interfaces;
 using DeliveryVHGP.Core.Interfaces.IRepositories;
@@ -43,6 +44,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories.Common
             Transaction = new TransactionRepository(_context);
             OrderTask = new OrderTaskRepository(_context);
             AccountBuilding = new AccountBuildingRepository(_context);
+            Feedback = new FeedbackRepository(_context);
             _notificationService = notificationService;
         }
         public IMenuRepository Menu { get; private set; }
@@ -78,5 +80,6 @@ namespace DeliveryVHGP.Infrastructure.Repositories.Common
         public ITransactionRepository Transaction { get; private set; }
         public IOrderTaskRepository OrderTask { get; private set; }
         public IAccountBuildingRepository AccountBuilding { get; private set; }
+        public IFeedbackRepository Feedback { get; private set; }
     }
 }
