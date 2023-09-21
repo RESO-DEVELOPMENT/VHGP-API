@@ -3,6 +3,7 @@ using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Core.Interface.IRepositories;
 using DeliveryVHGP.Core.Models;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
+using FirebaseAdmin.Messaging;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeliveryVHGP.WebApi.Repositories
@@ -306,54 +307,70 @@ namespace DeliveryVHGP.WebApi.Repositories
             return listStore;
         }
         //Get a menu by mode id and group by store (in customer web) 
-        public async Task<MenuView> GetMenuByModeAndGroupByStore(string modeId, int page, int pageSize)
+        public async Task<MenuView> GetMenuByModeAndGroupByStore(string modeId, string areaId, int page, int pageSize)
         {
-            double time = await GetTime();
-            var menuView = await context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
-                .OrderByDescending(x => x.Priority).Select(x => new MenuView
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Image = x.Image,
-                    StartTime = x.StartHour,
-                    EndTime = x.EndHour
-                }).FirstOrDefaultAsync();
-            if (menuView == null) throw new Exception("Not found menu");
+            double time = await GetHourMinute();
+            var menuViewList = await (from ab in context.MenuInAreas
+                                  join a in context.Menus on ab.MenuId equals a.Id
+                                  join b in context.Areas on ab.AreaId equals b.Id
+                                  where ab.AreaId == areaId 
+                                  && a.SaleMode == modeId
+                                  && a.StartHour <= time && a.EndHour > time
+                                  orderby a.Priority descending
+                                  select new MenuView
+                                  {
+                                      Id = ab.MenuId,
+                                      Name = a.Name,
+                                      Image = a.Image,
+                                      StartTime = a.StartHour,
+                                      EndTime = a.EndHour,
+                                      ShipCost = a.ShipCost
+                                  }).ToListAsync();
+            if (menuViewList[0] == null) throw new Exception("Not found menu");
+            var menuView = menuViewList[0];
 
             var listStore = await (from menu in context.Menus
-                                   join sm in context.StoreInMenus on menu.Id equals sm.MenuId
-                                   join store in context.Stores on sm.StoreId equals store.Id
-                                   where menu.Id == menuView.Id && store.Status == true
-                                   select new CategoryStoreInMenu
-                                   {
-                                       Id = store.Id,
-                                       Name = store.Name,
-                                       Image = store.Image
+                                     join sm in context.StoreInMenus on menu.Id equals sm.MenuId
+                                     join store in context.Stores on sm.StoreId equals store.Id
+                                     where menu.Id == menuView.Id && store.Status == true
+                                     select new CategoryStoreInMenu
+                                     {
+                                         Id = store.Id,
+                                         Name = store.Name,
+                                         Image = store.Image
 
-                                   }).ToListAsync();
-            foreach (var store in listStore)
-            {
-                var listProduct = await GetListProductInMenuByStoreId(store.Id, menuView.Id, page, pageSize);
-                store.ListProducts = listProduct;
-            }
-            menuView.ListCategoryStoreInMenus = listStore;
-            return menuView;
+                                     }).ToListAsync();
+              foreach (var store in listStore)
+              {
+                  var listProduct = await GetListProductInMenuByStoreId(store.Id, menuView.Id, page, pageSize);
+                  store.ListProducts = listProduct;
+              }
+              menuView.ListCategoryStoreInMenus = listStore; 
+              return menuView; 
         }
 
         //Get a menu by mode id and group by category (in customer web) 
-        public async Task<MenuView> GetMenuByModeAndGroupByCategory(string modeId, int page, int pageSize)
+        public async Task<MenuView> GetMenuByModeAndGroupByCategory(string modeId, string areaId, int page, int pageSize)
         {
-            double time = await GetTime();
-            var menuView = await context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
-                .OrderByDescending(x => x.Priority).Select(x => new MenuView
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Image = x.Image,
-                    StartTime = x.StartHour,
-                    EndTime = x.EndHour
-                }).FirstOrDefaultAsync();
-            if (menuView == null) throw new Exception("Not found menu");
+            double time = await GetHourMinute();
+            var menuViewList = await (from ab in context.MenuInAreas
+                                      join a in context.Menus on ab.MenuId equals a.Id
+                                      join b in context.Areas on ab.AreaId equals b.Id
+                                      where ab.AreaId == areaId
+                                      && a.SaleMode == modeId
+                                      && a.StartHour <= time && a.EndHour > time
+                                      orderby a.Priority descending
+                                      select new MenuView
+                                      {
+                                          Id = ab.MenuId,
+                                          Name = a.Name,
+                                          Image = a.Image,
+                                          StartTime = a.StartHour,
+                                          EndTime = a.EndHour,
+                                          ShipCost = a.ShipCost
+                                      }).ToListAsync();
+            if (menuViewList[0] == null) throw new Exception("Not found menu");
+            var menuView = menuViewList[0];
 
             var listCategory = await (from menu in context.Menus
                                       join cm in context.CategoryInMenus on menu.Id equals cm.MenuId
@@ -881,6 +898,17 @@ namespace DeliveryVHGP.WebApi.Repositories
             TimeZoneInfo vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById(vnTimeZoneKey);
             string time = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, vnTimeZone).ToString("HH.mm");
             var time2 = Double.Parse(time);
+            return time2;
+        }
+
+        public async Task<double> GetHourMinute()
+        {
+            DateTime utcDateTime = DateTime.UtcNow;
+            string vnTimeZoneKey = "SE Asia Standard Time";
+            TimeZoneInfo vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById(vnTimeZoneKey);
+            string hour = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, vnTimeZone).ToString("HH");
+            string minute = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, vnTimeZone).ToString("mm");
+            var time2 = Double.Parse(hour) + Double.Parse(minute) / 60;
             return time2;
         }
         public async Task<string> ConvertDayOfWeek(DateTime date)

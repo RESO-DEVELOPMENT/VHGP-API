@@ -93,18 +93,18 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// *Note: gb = store(group by store), cate(group by catedory)
         /// </summary>
         [HttpGet("filter")]
-        public async Task<ActionResult<MenuView>> GetMenusByModeId(string modeId, string gb, int page, int pageSize)
+        public async Task<ActionResult<MenuView>> GetMenusByModeId(string modeId, string areaId, string gb, int page, int pageSize)
         {
             MenuView menu = new MenuView();
             try
             {
                 if (gb == "store")
                 {
-                    menu = await repository.Menu.GetMenuByModeAndGroupByStore(modeId, page, pageSize);
+                    menu = await repository.Menu.GetMenuByModeAndGroupByStore(modeId, areaId, page, pageSize);
                 }
                 if (gb == "cate")
                 {
-                    menu = await repository.Menu.GetMenuByModeAndGroupByCategory(modeId, page, pageSize);
+                    menu = await repository.Menu.GetMenuByModeAndGroupByCategory(modeId, areaId, page, pageSize);
                 }
             }
             catch
