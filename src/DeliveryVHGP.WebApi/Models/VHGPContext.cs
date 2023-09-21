@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DeliveryVHGP.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -32,6 +33,7 @@ namespace DeliveryVHGP.WebApi.Models
         public virtual DbSet<FcmToken> FcmTokens { get; set; } = null!;
         public virtual DbSet<Hub> Hubs { get; set; } = null!;
         public virtual DbSet<Menu> Menus { get; set; } = null!;
+        public virtual DbSet<MenuInArea> MenuInAreas { get; set; } = null!;
         public virtual DbSet<Notification> Notifications { get; set; } = null!;
         public virtual DbSet<Order> Orders { get; set; } = null!;
         public virtual DbSet<OrderAction> OrderActions { get; set; } = null!;
@@ -382,6 +384,27 @@ namespace DeliveryVHGP.WebApi.Models
                 entity.Property(e => e.StartDate).HasMaxLength(20);
 
                 entity.Property(e => e.Status).HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<MenuInArea>(entity =>
+            {
+                entity.ToTable("MenuInArea");
+
+                entity.Property(e => e.Id).HasMaxLength(50);
+
+                entity.Property(e => e.AreaId).HasMaxLength(50);
+
+                entity.Property(e => e.MenuId).HasMaxLength(50);
+
+                entity.HasOne(d => d.Area)
+                    .WithMany(p => p.MenuInAreas)
+                    .HasForeignKey(d => d.AreaId)
+                    .HasConstraintName("FK_MenuInArea_Area");
+
+                entity.HasOne(d => d.Menu)
+                    .WithMany(p => p.MenuInAreas)
+                    .HasForeignKey(d => d.MenuId)
+                    .HasConstraintName("FK_MenuInArea_Menu");
             });
 
             modelBuilder.Entity<Notification>(entity =>

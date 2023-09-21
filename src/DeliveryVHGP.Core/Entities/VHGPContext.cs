@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using DeliveryVHGP.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace DeliveryVHGP.Core.Data
+namespace DeliveryVHGP.Core.Entities
 {
-    public partial class DeliveryVHGP_DBContext : DbContext
+    public partial class VHGPContext : DbContext
     {
-        public DeliveryVHGP_DBContext()
+        public VHGPContext()
         {
         }
 
-        public DeliveryVHGP_DBContext(DbContextOptions<DeliveryVHGP_DBContext> options)
+        public VHGPContext(DbContextOptions<VHGPContext> options)
             : base(options)
         {
         }
