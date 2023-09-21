@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 using System.Text.RegularExpressions;
 using Firebase.Auth;
+using System.IO;
 
 namespace DeliveryVHGP.Infrastructure.Services
 {
@@ -63,6 +64,7 @@ namespace DeliveryVHGP.Infrastructure.Services
 
         //    return await Upload(filename, stream);
         //}
+
         public async Task<string> UploadFile(string fileimg ,string base64String)
         {
             if (string.IsNullOrWhiteSpace(base64String))
@@ -81,7 +83,7 @@ namespace DeliveryVHGP.Infrastructure.Services
 
             //
             var auth = new FirebaseAuthProvider(new FirebaseConfig(ApiKey));
-            var a = await auth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);
+            var a = await auth.SignInWithEmailAndPasswordAsync(AuthEmail, AuthPassword);  
 
             var cancellationToken = new CancellationTokenSource().Token;
 
@@ -92,10 +94,9 @@ namespace DeliveryVHGP.Infrastructure.Services
                         ThrowOnCancel = true
                     }).Child("assets").Child($"{fileImg}/{filename}").PutAsync(stream, cancellationToken);
 
-            return (await task).ToString();
-            
+            return (await task).ToString();           
         }
-
+  
         private Stream ConvertBase64ToStream(string base64)
         {
             //if (string.IsNullOrWhiteSpace(base64))

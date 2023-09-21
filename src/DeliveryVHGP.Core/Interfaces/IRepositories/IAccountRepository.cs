@@ -9,6 +9,7 @@ namespace DeliveryVHGP.Core.Interface.IRepositories
         Task<List<AccountModel>> GetAll(int pageIndex, int pageSize);
         Task<AccountCheck> CheckAccount(string id);
         Task<AccountModel> Login(string id, string pass);
+        Task<dynamic> LoginWithPhoneNumber(string idToken, string fcmToken);
         Task<string> CreateAcc(string id, string pass, string name, string imageUrl);
         Task<string> UpdateAccount(AccountViewModel acc);
         Task<string> ChangePass(string id, string pass, string newPass);

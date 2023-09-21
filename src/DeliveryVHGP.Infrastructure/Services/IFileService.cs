@@ -1,4 +1,6 @@
-﻿namespace DeliveryVHGP.Infrastructure.Services
+﻿
+namespace DeliveryVHGP.Infrastructure.Services
+
 {
     public interface IFileService
     {
