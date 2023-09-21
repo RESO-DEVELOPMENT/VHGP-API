@@ -9,6 +9,7 @@ namespace DeliveryVHGP.WebApi.Entities
         {
             CategoryInMenus = new HashSet<CategoryInMenu>();
             DeliveryTimeFrames = new HashSet<DeliveryTimeFrame>();
+            MenuInAreas = new HashSet<MenuInArea>();
             Orders = new HashSet<Order>();
             ProductInMenus = new HashSet<ProductInMenu>();
             StoreInMenus = new HashSet<StoreInMenu>();
@@ -24,12 +25,13 @@ namespace DeliveryVHGP.WebApi.Entities
         public double? StartHour { get; set; }
         public double? EndHour { get; set; }
         public string? SaleMode { get; set; }
-        public int? Priority { get; set; }
-        public bool? Active { get; set; }
+        public string? Status { get; set; }
         public double? ShipCost { get; set; }
+        public int? Priority { get; set; }
 
         public virtual ICollection<CategoryInMenu> CategoryInMenus { get; set; }
         public virtual ICollection<DeliveryTimeFrame> DeliveryTimeFrames { get; set; }
+        public virtual ICollection<MenuInArea> MenuInAreas { get; set; }
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<ProductInMenu> ProductInMenus { get; set; }
         public virtual ICollection<StoreInMenu> StoreInMenus { get; set; }

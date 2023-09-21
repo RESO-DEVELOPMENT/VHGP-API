@@ -18,7 +18,7 @@ namespace DeliveryVHGP.WebApi.Entities
         public string? Phone { get; set; }
         public string? Image { get; set; }
         public string? DeliveryTeam { get; set; }
-        public bool? Status { get; set; }
+        public string? Status { get; set; }
         public string? CreateAt { get; set; }
         public string? UpdateAt { get; set; }
         public string? Email { get; set; }
