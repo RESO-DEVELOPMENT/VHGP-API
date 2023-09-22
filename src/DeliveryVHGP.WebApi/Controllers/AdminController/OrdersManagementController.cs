@@ -17,7 +17,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// <summary>
         /// Get list order with pagination
         /// </summary>
-        // GET: api/Orders
+        // GET: api/v1/order-management/orders
         [HttpGet]
         public async Task<ActionResult> GetOrder(int pageIndex, int pageSize, [FromQuery] FilterRequest request)
         {
@@ -34,41 +34,22 @@ namespace DeliveryVHGP.WebApi.Controllers
                 return Conflict();
             }
         }
+
         /// <summary>
         /// Get order report(admin web)
         /// </summary>
-        //GET: api/v1/OrderReport?pageIndex=1&pageSize=3
+        //GET: api/v1/order-management/report?StartDate=01/01/2023&EndDate=01/02/2023 
         [HttpGet("report")]
-        public async Task<ActionResult> GetListOrdersReport([FromQuery] DateFilterRequest request, [FromQuery] MonthFilterRequest monthFilter)
+        public async Task<ActionResult> GetListOrdersReport([FromQuery] DateRangeFilterRequest dateFilter)
         {
-            return Ok(await repository.Order.GetListOrdersReport(request, monthFilter));
-
             try
             {
-                var report = await repository.Order.GetListOrdersReport(request, monthFilter);
-                return Ok(new { StatusCode = "Successful", data = report });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    StatusCode = "Fail",
-                    message = ex.Message
+                var report = await repository.Order.GetListOrdersReport(dateFilter);
+                return Ok(new 
+                { 
+                    StatusCode = "Successful", 
+                    data = report 
                 });
-            }
-        } 
-        /// <summary>
-        /// Get order reportPrice(admin web)
-        /// </summary>
-        //GET: api/v1/OrderReport?pageIndex=1&pageSize=3
-        [HttpGet("report-price")]
-        public async Task<ActionResult> GetListOrdersReportPrice([FromQuery] DateFilterRequest request, [FromQuery] MonthFilterRequest monthFilter)
-        {
-           
-            try
-            {
-                var report = await repository.Order.GetPriceOrdersReports(request, monthFilter);
-                return Ok(new { StatusCode = "Successful", data = report });
             }
             catch (Exception ex)
             {
@@ -79,6 +60,33 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Get order reportPrice(admin web)
+        /// </summary>
+        //GET: api/v1/order-management/report-price?StartDate=01/01/2023&EndDate=01/02/2023
+        [HttpGet("report-price")]
+        public async Task<ActionResult> GetListOrdersReportPrice([FromQuery] DateRangeFilterRequest dateFilter)
+        {
+            try
+            {
+                var report = await repository.Order.GetPriceOrdersReports(dateFilter);
+                return Ok(new 
+                { 
+                    StatusCode = "Successful", 
+                    data = report 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = ex.Message
+                });
+            }
+        }
+
         /// <summary>
         /// Get list all order by payment with pagination
         /// </summary>
@@ -93,9 +101,9 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// </summary>
         //GET: api/v1/OrderByPhone?pageIndex=1&pageSize=3
         [HttpGet("search-phone")]
-        public async Task<ActionResult> GetListOrderByPhone(int pageIndex, int pageSize,string phone)
+        public async Task<ActionResult> GetListOrderByPhone(int pageIndex, int pageSize, string phone)
         {
-            return Ok(await repository.Order.GetOrderByPhone( pageIndex, pageSize, phone));
+            return Ok(await repository.Order.GetOrderByPhone(pageIndex, pageSize, phone));
         }
         /// <summary>
         /// Get list all order by status with pagination
@@ -145,7 +153,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// </summary>
         // GET: api/Orders
         [HttpGet("wallets")]
-        public async Task<ActionResult> GetWallet(int pageIndex, int pageSize,[FromQuery] WalletsFilter request)
+        public async Task<ActionResult> GetWallet(int pageIndex, int pageSize, [FromQuery] WalletsFilter request)
         {
             try
             {

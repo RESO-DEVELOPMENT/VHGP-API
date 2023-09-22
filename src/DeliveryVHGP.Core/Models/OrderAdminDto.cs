@@ -44,6 +44,11 @@
             public int SearchByStatus { get; set; } = -1;
             public string? SearchByMode { get; set; } = "";
         }
+        public class DateRangeFilterRequest
+        {
+            public string? StartDate { get; set; } = "";
+            public string? EndDate { get; set; } = "";
+        }
         public class OrderAdminDtoInStore
         {
             public string Id { get; set; } = null!;
