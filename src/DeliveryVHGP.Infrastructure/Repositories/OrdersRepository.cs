@@ -391,6 +391,61 @@ namespace DeliveryVHGP.WebApi.Repositories
                 report.TotalShipper = countShipper; // tong store
                 return report;
             }
+
+            return null;
+        }
+
+        public async Task<SystemReportModel> GetListOrdersReport(DateRangeFilterRequest request)
+        {
+            SystemReportModel report = new SystemReportModel()
+            {
+                TotalOrderNew = 0,
+                TotalOrderUnpaidVNpay = 0,
+                TotalOrderCancel = 0,
+                TotalOrderCompleted = 0,
+                TotalOrder = 0,
+                TotalStore = 0, // tong store
+                TotalShipper = 0, // tong store
+
+            };
+
+            //SystemReportModelInStore report = new SystemReportModelInStore()
+
+            if (request.StartDate != "" && request.EndDate != "")
+            {
+                DateTime startDate = DateTime.Parse(request.StartDate);
+                DateTime endDate = DateTime.Parse(request.EndDate);
+
+                var lstOrder = await (from orderr in context.Orders
+                                      join h in context.OrderActionHistories on orderr.Id equals h.OrderId
+                                      where h.ToStatus == 0 && h.CreateDate > startDate && h.CreateDate < endDate
+                                      select orderr).ToListAsync();
+                var countStore = context.Stores.Count();
+                var countShipper = context.Shippers.Count();
+                if (!lstOrder.Any())
+                {
+                    return report;
+                }
+
+                report.TotalOrderNew = lstOrder.Where(order => order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.Assigning || order.Status == (int)OrderStatusEnum.Accepted
+                                                    || order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery
+                                                    || order.Status == (int)InProcessStatus.AtHub || order.Status == (int)InProcessStatus.CustomerDelivery).Count(); //don hang moi
+                report.TotalOrderUnpaidVNpay = lstOrder.Where(order => order.Status == (int)OrderStatusEnum.New).Count();//don hang chua thanh toan vnpay
+                report.TotalOrderCancel = lstOrder.Where(order => order.Status == (int)OrderStatusEnum.Fail || order.Status == (int)FailStatus.CustomerFail
+                                                    || order.Status == (int)FailStatus.OutTime || order.Status == (int)FailStatus.StoreFail || order.Status == (int)FailStatus.ShipperFail).Count();//don hang chua thanh toan vnpay
+                report.TotalOrderCompleted = lstOrder.Where(order => order.Status == (int)OrderStatusEnum.Completed).Count(); //don hang thanh cong
+                report.TotalOrder = lstOrder.Where(order => order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.New
+                                                    || order.Status == (int)OrderStatusEnum.Fail || order.Status == (int)FailStatus.CustomerFail
+                                                    || order.Status == (int)FailStatus.OutTime || order.Status == (int)FailStatus.StoreFail || order.Status == (int)FailStatus.ShipperFail
+                                                    || order.Status == (int)OrderStatusEnum.Completed || order.Status == (int)OrderStatusEnum.Assigning || order.Status == (int)OrderStatusEnum.Accepted
+                                                    || order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery
+                                                    || order.Status == (int)InProcessStatus.AtHub || order.Status == (int)InProcessStatus.CustomerDelivery
+                                                  ).Count(); //tong don hang
+                report.TotalStore = countStore; // tong store
+                report.TotalShipper = countShipper; // tong store
+                return report;
+            }
+
             return null;
         }
 
@@ -471,6 +526,58 @@ namespace DeliveryVHGP.WebApi.Repositories
             }
             return null;
         }
+
+        public async Task<PriceReportModel> GetPriceOrdersReports(DateRangeFilterRequest request)
+        {
+            PriceReportModel report = new PriceReportModel()
+            {
+                TotalShipFree = 0,
+                TotalPaymentVNPay = 0,
+                TotalPaymentCash = 0,
+                TotalOrder = 0,
+                TotalRevenueOrder = 0,
+                TotalProfitOrder = 0
+
+            };
+
+            //SystemReportModelInStore report = new SystemReportModelInStore()
+
+            if (request.StartDate != "" && request.EndDate != "")
+            {
+                DateTime startDate = DateTime.Parse(request.StartDate);
+                DateTime endDate = DateTime.Parse(request.EndDate);
+
+                var lstOrder = await (from orderr in context.Orders
+                                      join h in context.OrderActionHistories on orderr.Id equals h.OrderId
+                                      join p in context.Payments on orderr.Id equals p.OrderId
+                                      where h.ToStatus == 0 && h.CreateDate > startDate && h.CreateDate < endDate
+                                      select orderr).ToListAsync();
+
+                var lstPayment = await (from pay in context.Payments
+                                        join o in context.Orders on pay.OrderId equals o.Id
+                                        join h in context.OrderActionHistories on o.Id equals h.OrderId
+                                        where h.ToStatus == 0 && h.CreateDate > startDate && h.CreateDate < endDate
+                                        where o.Status == (int)OrderStatusEnum.Completed
+                                        select pay).ToListAsync();
+                if (!lstOrder.Any())
+                {
+                    return report;
+                }
+
+                report.TotalShipFree = (double)lstOrder.Where(p => p.Status == (int)OrderStatusEnum.Completed).Sum(o => o.ShipCost); // tổng tiền ship
+                                                                                                                                     //TotalSurcharge = lstOrder.Where(p => p.Status == (int)OrderStatusEnum.Completed).Where(x => x.ServiceId == "1").Count() * 10000, // tổng tiền service
+                report.TotalPaymentVNPay = (double)lstPayment.Where(p => p.Type == (int)PaymentEnum.VNPay).Sum(o => o.Amount);// tổng tiền thanh toán VnPay
+                report.TotalPaymentCash = (double)lstPayment.Where(p => p.Type == (int)PaymentEnum.Cash).Sum(o => o.Amount);// tổng tiền thanh toán Cash
+                report.TotalOrder = (double)lstOrder.Where(p => p.Status == (int)OrderStatusEnum.Completed).Sum(o => o.Total); // tổng tiền order
+                report.TotalRevenueOrder = (double)lstOrder.Where(p => p.Status == (int)OrderStatusEnum.Completed).Sum(o => o.ShipCost) + (double)lstOrder.Where(p => p.Status == (int)OrderStatusEnum.Completed).Sum(o => o.Total); // Doanh thu
+                report.TotalProfitOrder = (double)lstOrder.Where(p => p.Status == (int)OrderStatusEnum.Completed).Sum(o => o.ShipCost * 0.2) + (double)lstPayment.Where(p => p.Type == (int)PaymentEnum.VNPay).Sum(o => o.Amount * 0.2) + (double)lstPayment.Where(p => p.Type == (int)PaymentEnum.Cash).Sum(o => o.Amount * 0.2); // Lợi nhuận // Lợi nhuận
+
+                return report;
+            }
+
+            return null;
+        }
+
         public async Task<List<OrderAdminDto>> GetOrderByPayment(int PaymentType, int pageIndex, int pageSize)
         {
             var lstOrder = await (from order in context.Orders
@@ -730,18 +837,18 @@ namespace DeliveryVHGP.WebApi.Repositories
         public async Task<OrderDto> CreatNewOrder(OrderDto order)
         {
             var listProductId = order.OrderDetail.Select(x => x.ProductId);
-            if(listProductId == null)
+            if (listProductId == null)
             {
                 throw new Exception();
             }
             var menu = context.Menus.FirstOrDefault(m => m.Id.Equals(order.MenuId));
-            if(menu == null)
+            if (menu == null)
             {
                 throw new Exception("Menu không tồn tại hoặc không tìm thấy menu");
             }
             foreach (var proId in listProductId)
             {
-                var pro =  await (from m in context.Menus
+                var pro = await (from m in context.Menus
                                  join pm in context.ProductInMenus on menu.Id equals pm.MenuId
                                  join product in context.Products on pm.ProductId equals product.Id
                                  join sto in context.Stores on product.StoreId equals sto.Id
