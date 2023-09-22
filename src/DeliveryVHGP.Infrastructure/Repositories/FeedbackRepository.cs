@@ -116,6 +116,24 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             return feedbackModel;
         }
 
+        public async Task<FeedbackModel> GetFeedbackByOrderId(string orderId)
+        {
+            var order = context.Orders.Where(o => o.Id == orderId).FirstOrDefault() ?? throw new Exception("Order does not exist");
+
+            var feedback = await context.Feedbacks.Where(f => f.OrderId == orderId).Select(
+                f => new FeedbackModel
+                {
+                    Description = f.Description,
+                    Rating = f.Rating,
+                }).FirstOrDefaultAsync();
+
+            if (feedback == null)
+            {
+                throw new Exception("Feedback does not exist.");
+            }
+
+            return feedback;
+        }
     }
 }
 

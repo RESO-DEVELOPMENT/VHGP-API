@@ -10,6 +10,7 @@ namespace DeliveryVHGP.Core.Interfaces.IRepositories
 
         Task<IEnumerable<FeedbackModel>> GetAllFeedbackByStore(string storeId, int pageIndex, int pageSize, bool? isAscending = null);
         Task<FeedbackModel> GetFeedbackById(string feedbackId);
+        Task<FeedbackModel> GetFeedbackByOrderId(string orderId);
         Task<FeedbackModel> CreateFeedback(string orderId, FeedbackModel feedback);
     }
 }
