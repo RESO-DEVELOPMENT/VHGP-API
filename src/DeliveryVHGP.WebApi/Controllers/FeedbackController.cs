@@ -50,6 +50,22 @@ namespace DeliveryVHGP.WebApi.Controllers
         }
 
         /// <summary>
+        /// Get a feedback by orderId
+        /// </summary>
+        [HttpGet("order/{orderId}")]
+        public async Task<ActionResult> GetFeedbackByOrderId([FromRoute] string orderId)
+        {
+            try
+            {
+                return Ok(await repository.Feedback.GetFeedbackByOrderId(orderId));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Create a feedback
         /// </summary>
         [HttpPost]
