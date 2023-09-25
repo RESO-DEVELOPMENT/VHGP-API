@@ -44,6 +44,7 @@ namespace DeliveryVHGP.WebApi.Controllers.AdminController
             }
             return Ok(menu);
         }
+
         [HttpPut("{menuId}")]
         public async Task<ActionResult<MenuDto>> UpdateMenu(string menuId, MenuDto menu)
         {
@@ -61,6 +62,7 @@ namespace DeliveryVHGP.WebApi.Controllers.AdminController
             }
             return Ok(menu);
         }
+
         [HttpDelete("{menuId}")]
         public async Task<ActionResult<MenuDto>> DeleteMenu(string menuId)
         {
@@ -77,6 +79,23 @@ namespace DeliveryVHGP.WebApi.Controllers.AdminController
                 return Conflict(ex.Message);
             }
             return Ok();
+        }
+
+        /// <summary>
+        /// Get area of a menu
+        /// </summary>
+        [HttpGet("get-area")]
+        public async Task<ActionResult> GetAreaOfMenu(string menuId, int pageIndex, int pageSize)
+        {
+            try
+            {
+                var detail = await repository.Menu.GetAreaOfMenu(menuId, pageIndex, pageSize);
+                return Ok(detail);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
     }

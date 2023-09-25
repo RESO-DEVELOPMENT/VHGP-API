@@ -917,6 +917,23 @@ namespace DeliveryVHGP.WebApi.Repositories
             await context.SaveChangesAsync();
         }
 
+        public async Task<List<AreaDto>> GetAreaOfMenu(string menuId, int pageIndex, int pageSize)
+        {
+            var listAreas = await (from a in context.Areas
+                                   join ma in context.MenuInAreas on a.Id equals ma.AreaId
+                                   where ma.MenuId == menuId
+                                   select new AreaDto
+                                   {
+                                       Id = a.Id,
+                                       Name = a.Name,
+                                   }).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            if (listAreas == null)
+            {
+                throw new Exception();
+            }
+            return listAreas;
+        }
+
         public async Task<double> GetTime()
         {
             DateTime utcDateTime = DateTime.UtcNow;

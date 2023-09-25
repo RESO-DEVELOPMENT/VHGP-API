@@ -33,6 +33,7 @@ namespace DeliveryVHGP.Core.Interface.IRepositories
         Task<MenuDto> CreatNewMenu(MenuDto menu);
         Task<MenuDto> UpdateMenu(string menuId, MenuDto menu);
         Task DeleteMenu(string menuId);
+        Task<List<AreaDto>> GetAreaOfMenu(string menuId, int pageIndex, int pageSize);
 
     }
 }
