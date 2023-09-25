@@ -15,15 +15,24 @@ namespace DeliveryVHGP.WebApi.Controllers
             this.repository = repository;
         }
 
-        // GET: api/Menus
+        /// <summary>
+        /// Get all menu by modeId (store, admin web)
+        /// </summary>
+        [HttpGet("customer/byMode")]
+        public async Task<ActionResult<List<MenuView>>> GetMenusByModeForCustomer(string modeId, string areaId)
+        {
+            return Ok(await repository.Menu.GetListMenuByModeIdForCustomer(modeId, areaId));
+        }
+
         /// <summary>
         /// Get all menu by modeId (store, admin web)
         /// </summary>
         [HttpGet("byMode")]
-        public async Task<ActionResult<List<MenuView>>> GetMenusByMode(string modeId)
+        public async Task<ActionResult<List<MenuView>>> GetMenusByModeForAdmin(string modeId)
         {
-            return Ok(await repository.Menu.GetListMenuByModeId(modeId));
+            return Ok(await repository.Menu.GetListMenuByModeIdForAdmin(modeId));
         }
+
         /// <summary>
         /// Get list all store by Name with pagination
         /// </summary>

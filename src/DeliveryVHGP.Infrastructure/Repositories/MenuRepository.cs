@@ -64,7 +64,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             await Save();
 
         }
-        public async Task<List<MenuView>> GetListMenuByModeId(string modeId)
+        public async Task<List<MenuView>> GetListMenuByModeIdForAdmin(string modeId)
         {
             if (modeId == "3")
             {
@@ -105,6 +105,55 @@ namespace DeliveryVHGP.WebApi.Repositories
             }).ToListAsync();
             return listMenu;
         }
+
+        public async Task<List<MenuView>> GetListMenuByModeIdForCustomer(string modeId, string areaId)
+        {
+            if (modeId == "3")
+            {
+                DateTime? date = DateTime.UtcNow.AddHours(7).Date;
+                List<DateTime> listDate = new List<DateTime>();
+                for (int i = 1; i <= 7; i++)
+                {
+                    listDate.Add(date.Value.AddDays(i));
+                }
+
+                var listMenuMode3 = await (
+                    from m in context.Menus
+                    join ma in context.MenuInAreas
+                    on m.Id equals ma.MenuId
+                    where ma.AreaId == areaId &&
+                    m.SaleMode == modeId && listDate.Contains(m.DayFilter.Value.Date)
+                    orderby m.DayFilter
+                    select new MenuView
+                    {
+                        Id = m.Id,
+                        Image = m.Image,
+                        Name = m.Name,
+                        DayFilter = m.DayFilter.ToString(),
+                        StartTime = m.StartHour,
+                        EndTime = m.EndHour,
+                        ShipCost = m.ShipCost,
+                    }).ToListAsync();
+                return listMenuMode3;
+            }
+            var listMenu = await (
+                    from m in context.Menus
+                    join ma in context.MenuInAreas
+                    on m.Id equals ma.MenuId
+                    where ma.AreaId == areaId && m.SaleMode == modeId
+                    orderby m.StartHour
+                    select new MenuView
+                    {
+                        Id = m.Id,
+                        Image = m.Image,
+                        Name = m.Name,
+                        StartTime = m.StartHour,
+                        EndTime = m.EndHour,
+                        ShipCost = m.ShipCost,
+                    }).ToListAsync();
+            return listMenu;
+        }
+
         public async Task<MenuDto> GetMenuDetail(string menuId)
         {
             var menu = await context.Menus.FindAsync(menuId);
