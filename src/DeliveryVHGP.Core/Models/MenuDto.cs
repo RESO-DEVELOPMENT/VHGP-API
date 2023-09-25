@@ -16,5 +16,6 @@
         public int? Priority { get; set; }
         public string? Status { get; set; }
         public List<string>? listCategory { get; set; }
+        public List<string>? listAreaId { get; set; }
     }
 }
