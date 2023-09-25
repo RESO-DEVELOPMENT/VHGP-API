@@ -833,7 +833,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                 DayFilter = DateTime.Parse(menu.DayFilter),
                 SaleMode = menu.ModeId,
                 ShipCost = menu.ShipCost,
-                Priority = menu.Priority
+                Priority = menu.Priority,
+                Status = menu.Status
             };
             List<String> listCate = (List<String>)await context.CategoryInMenus.Where(x => x.MenuId == menuId).Select(x => x.CategoryId).ToListAsync();
             List<String> listNewCate = (List<String>)menu.listCategory;
