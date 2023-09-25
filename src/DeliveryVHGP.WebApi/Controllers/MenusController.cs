@@ -16,7 +16,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         }
 
         /// <summary>
-        /// Get all menu by modeId (store, admin web)
+        /// Get all menu by modeId (customer web)
         /// </summary>
         [HttpGet("customer/byMode")]
         public async Task<ActionResult<List<MenuView>>> GetMenusByModeForCustomer(string modeId, string areaId)
