@@ -797,17 +797,43 @@ namespace DeliveryVHGP.WebApi.Repositories
                 Priority = menu.Priority,
                 ShipCost = menu.ShipCost,
                 Status = menu.Status,
-                //Active = true
             };
             foreach (var category in menu.listCategory)
             {
                 var cmId = Guid.NewGuid().ToString();
                 CategoryInMenu cate = new CategoryInMenu { Id = cmId, CategoryId = category, MenuId = id };
-                context.CategoryInMenus.Add(cate);
+                context.CategoryInMenus.Add(cate); 
             }
+
+            var listAreaId = menu.listAreaId;
+            if (listAreaId == null) throw new Exception();
+            foreach (var areaId in listAreaId)
+            {
+                // check area is existed or not
+                var checkAreaId = await context.Areas.Where(a => a.Id == areaId).FirstOrDefaultAsync();
+                if (checkAreaId == null)
+                {
+                    throw new Exception("Area ID không tồn tại");
+                }
+            }
+
             try
             {
+                // Create new Menu
                 await context.Menus.AddAsync(newMenu);
+
+                // Map the area to the menu
+                foreach (var areaId in listAreaId)
+                {
+                    MenuInArea mapping = new MenuInArea
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        MenuId = id,
+                        AreaId = areaId
+                    };
+                    await context.MenuInAreas.AddAsync(mapping);
+                }
+
                 await context.SaveChangesAsync();
             }
             catch
