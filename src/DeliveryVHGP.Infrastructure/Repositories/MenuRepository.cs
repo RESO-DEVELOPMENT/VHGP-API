@@ -91,9 +91,11 @@ namespace DeliveryVHGP.WebApi.Repositories
                 }).ToListAsync();
                 return listMenuMode3;
             }
+
             var listMenu = await context.Menus
                 .Where(m => m.SaleMode == modeId)
-                .OrderBy(x => x.StartHour)
+                .OrderBy(x => x.Status)
+                .ThenBy(x => x.StartHour)
                 .Select(x => new MenuView
             {
                 Id = x.Id,
@@ -102,6 +104,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 StartTime = x.StartHour,
                 EndTime = x.EndHour,
                 ShipCost = x.ShipCost,
+                Status = x.Status
             }).ToListAsync();
             return listMenu;
         }
@@ -161,7 +164,8 @@ namespace DeliveryVHGP.WebApi.Repositories
             {
                 throw new Exception("Not Found");
             }
-            List<string> cateId = await context.CategoryInMenus.Where(x => x.MenuId == menuId).Select(x => x.CategoryId).ToListAsync();
+            List<string> catesId = await context.CategoryInMenus.Where(x => x.MenuId == menuId).Select(x => x.CategoryId).ToListAsync();
+            List<string> areasId = await context.MenuInAreas.Where(x => x.MenuId == menuId).Select(x => x.AreaId).ToListAsync();
 
             MenuDto menuDto = new MenuDto
             {
@@ -173,10 +177,12 @@ namespace DeliveryVHGP.WebApi.Repositories
                 HourFilter = menu.HourFilter,
                 StartHour = menu.StartHour,
                 EndHour = menu.EndHour,
-                listCategory = cateId,
+                listCategory = catesId,
+                listAreaId = areasId,
                 ModeId = menu.SaleMode,
                 ShipCost = menu.ShipCost,
-                Priority = menu.Priority
+                Priority = menu.Priority,
+                Status = menu.Status,
             };
             return menuDto;
         }
@@ -845,7 +851,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 SaleMode = menu.ModeId,
                 Priority = menu.Priority,
                 ShipCost = menu.ShipCost,
-                Status = menu.Status,
+                Status = "Active",
             };
             foreach (var category in menu.listCategory)
             {
@@ -911,8 +917,10 @@ namespace DeliveryVHGP.WebApi.Repositories
                 Priority = menu.Priority,
                 Status = menu.Status
             };
+
             List<String> listCate = (List<String>)await context.CategoryInMenus.Where(x => x.MenuId == menuId).Select(x => x.CategoryId).ToListAsync();
             List<String> listNewCate = (List<String>)menu.listCategory;
+
             //remove old category in menu
             var listCateInMenu = await context.CategoryInMenus.Where(x => x.MenuId == menuId).ToListAsync();
             if (listCateInMenu.Any())
@@ -924,7 +932,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 CategoryInMenu cate = new CategoryInMenu { Id = cmId, CategoryId = category, MenuId = menuId };
                 await context.CategoryInMenus.AddAsync(cate);
             }
-
+            
             var listIntersection = listNewCate.Intersect(listCate);
             var listRemove = listCate.Except(listIntersection);
             //if (listCateInMenu.Any() && listNewCate != null)
@@ -933,17 +941,35 @@ namespace DeliveryVHGP.WebApi.Repositories
             //    //listIntersection = (List<string>)listNewCate.Intersect(listCate);
             //    //listRemove = (List<String>)listCate.Except(listIntersection);
             //}
+            
+            // remove products in menu
             if (listRemove.Any())
             {
-                foreach (var cate in listRemove)
+                foreach (var cateId in listRemove)
                 {
                     var product = await (from pro in context.Products
                                          join pm in context.ProductInMenus on pro.Id equals pm.ProductId
-                                         where pro.CategoryId == cate
+                                         where pro.CategoryId == cateId
                                          select pm).ToListAsync();
                     context.ProductInMenus.RemoveRange(product);
                 }
             }
+
+            // remove old areas in menu
+            var listAreaInMenuFromDd = context.MenuInAreas.Where(x => x.MenuId == menuId);
+
+            if (listAreaInMenuFromDd.Any()) context.MenuInAreas.RemoveRange(listAreaInMenuFromDd);
+            // add new areas to menu
+            foreach (var areaId in menu.listAreaId)
+            {
+                await context.MenuInAreas.AddAsync(new MenuInArea
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    MenuId = menuId,
+                    AreaId = areaId
+                });
+            }      
+
             context.Entry(menuUpdate).State = EntityState.Modified;
             try
             {
