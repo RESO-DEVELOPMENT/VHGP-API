@@ -5,6 +5,7 @@ using DeliveryVHGP.Core.Models;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using FirebaseAdmin.Messaging;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace DeliveryVHGP.WebApi.Repositories
 {
@@ -340,7 +341,7 @@ namespace DeliveryVHGP.WebApi.Repositories
         //Get a menu by mode id and show list store (in customer web) 
         public async Task<List<StoreInMenuView>> GetListStoreInMenuNow(string modeId, int page, int pageSize)
         {
-            double time = await GetTime();
+            double time = await GetHourMinute();
             var menuId = await context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
                 .OrderByDescending(x => x.Priority).Select(x => x.Id).FirstOrDefaultAsync();
             if (menuId == null) throw new Exception("Not found menu");
@@ -777,21 +778,28 @@ namespace DeliveryVHGP.WebApi.Repositories
         public async Task<ProductsInMenuModel> AddProductsToMenu(ProductsInMenuModel listProduct)
         {
             List<ProductInMenu> list = new List<ProductInMenu>();
+            List<StoreInMenu> listStoreInMenu = new List<StoreInMenu>();
             foreach (var product in listProduct.products)
             {
                 ProductInMenu pro = new ProductInMenu { Id = Guid.NewGuid().ToString(), Price = product.price, MenuId = listProduct.menuId, ProductId = product.id, Status = true };
                 list.Add(pro);
+
+                //Check storeId exist in StoreInMenu table
+                var storeId = await context.Products.Where(x => x.Id == product.id).Select(x => x.StoreId).FirstOrDefaultAsync();
+                var storeInMenu = await context.StoreInMenus.Where(x => x.StoreId == storeId && x.MenuId == listProduct.menuId).FirstOrDefaultAsync();
+                if (storeId != null && storeInMenu == null)
+                {
+                    if (!listStoreInMenu.Exists(x => x.StoreId == storeId))
+                    {
+                        listStoreInMenu.Add(new StoreInMenu { Id = Guid.NewGuid().ToString(), MenuId = listProduct.menuId, StoreId = storeId, Status = true });
+                    }
+                }
             }
-            //Check storeId exist in StoreInMenu table
-            var storeId = await context.Products.Where(x => x.Id == listProduct.products.ElementAt(0).id).Select(x => x.StoreId).FirstOrDefaultAsync();
-            var storeInMenu = await context.StoreInMenus.Where(x => x.StoreId == storeId && x.MenuId == listProduct.menuId).FirstOrDefaultAsync();
-            if (storeInMenu == null)
-            {
-                await context.StoreInMenus.AddAsync(new StoreInMenu { Id = Guid.NewGuid().ToString(), MenuId = listProduct.menuId, StoreId = storeId });
-            }
+
             try
             {
                 await context.ProductInMenus.AddRangeAsync(list);
+                await context.StoreInMenus.AddRangeAsync(listStoreInMenu);
                 await context.SaveChangesAsync();
             }
             catch
