@@ -13,6 +13,7 @@
         public string? StoreCategoryId { get; set; }
         public string? Slogan { get; set; }
         public string? Description { get; set; }
+        public string? CreditAccount { get; set; }
         public string? Phone { get; set; }
         public bool? Status { get; set; }
         public double? CommissionRate { get; set; }

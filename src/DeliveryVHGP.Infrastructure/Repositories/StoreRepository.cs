@@ -671,6 +671,8 @@ namespace DeliveryVHGP.WebApi.Repositories
             result.Slogan = store.Slogan;
             result.CommissionRate = store.CommissionRate;
             result.Description = store.Description;
+            result.CreditAccount = store.CreditAccount;
+
             if (status.Any())
             {
                 throw new Exception("Hiện tại cửa hàng đang có đơn hàng chưa hoàn thành!!" +
