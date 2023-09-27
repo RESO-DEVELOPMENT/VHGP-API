@@ -24,7 +24,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                            join c in context.Categories on p.CategoryId equals c.Id
                                            join pm in context.ProductInMenus on p.Id equals pm.ProductId
                                            join m in context.Menus on pm.MenuId equals m.Id
-                                           where m.Id == menuId
+                                           where m.Id == menuId && pm.Status == true
                                            select new ProductDetailsModel()
                                            {
                                                Id = p.Id,
