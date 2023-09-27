@@ -269,17 +269,18 @@ namespace DeliveryVHGP.WebApi.Repositories
             return lsrStore;
         }
         //Get a menu by mode id and show list category (in customer web) 
-        public async Task<MenuNotProductView> GetMenuByModeAndShowListCategory(string modeId)
+        public async Task<MenuNotProductView> GetMenuByModeAndShowListCategory(string modeId, string areaId)
         {
-            double time = await GetTime();
-            var menuView = await context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
-                .OrderByDescending(x => x.Priority).Select(x => new MenuNotProductView
+            double time = await GetHourMinute();
+            var menuView = await context.MenuInAreas.Where(x => x.AreaId == areaId).Include(x => x.Menu)
+                .Where(x => x.Menu.SaleMode == modeId && x.Menu.StartHour <= time && x.Menu.EndHour > time)
+                .OrderByDescending(x => x.Menu.Priority).Select(x => new MenuNotProductView
                 {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Image = x.Image,
-                    StartTime = x.StartHour,
-                    EndTime = x.EndHour
+                    Id = x.Menu.Id,
+                    Name = x.Menu.Name,
+                    Image = x.Menu.Image,
+                    StartTime = x.Menu.StartHour,
+                    EndTime = x.Menu.EndHour
                 }).FirstOrDefaultAsync();
             //if (menuView.Id == null) throw new Exception("Not found menu");
             if (menuView == null) throw new Exception("Not found menu");
@@ -299,11 +300,12 @@ namespace DeliveryVHGP.WebApi.Repositories
             return menuView;
         }
         //Get list store category in menu by mode
-        public async Task<List<StoreCategoryInMenuView>> GetListStoreCateInMenuNow(string modeId, int storeCateSize, int storeSize)
+        public async Task<List<StoreCategoryInMenuView>> GetListStoreCateInMenuNow(string modeId, string areaId, int storeCateSize, int storeSize)
         {
-            double time = await GetTime();
-            var menuId = await context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
-                .OrderByDescending(x => x.Priority).Select(x => x.Id).FirstOrDefaultAsync();
+            double time = await GetHourMinute();
+            var menuId = await context.MenuInAreas.Where(x => x.AreaId == areaId).Include(x => x.Menu)
+                .Where(x => x.Menu.SaleMode == modeId && x.Menu.StartHour <= time && x.Menu.EndHour > time)
+                .OrderByDescending(x => x.Menu.Priority).Select(x => x.MenuId).FirstOrDefaultAsync();
             if (menuId == null) throw new Exception("Not found menu");
 
             var listStoreCate = await (from menu in context.Menus
@@ -338,12 +340,15 @@ namespace DeliveryVHGP.WebApi.Repositories
 
             return listStoreCate;
         }
-        //Get a menu by mode id and show list store (in customer web) 
-        public async Task<List<StoreInMenuView>> GetListStoreInMenuNow(string modeId, int page, int pageSize)
+        //Get a menu by mode id and area id and show list store (in customer web) 
+        public async Task<List<StoreInMenuView>> GetListStoreInMenuNow(string modeId, string areaId, int page, int pageSize)
         {
             double time = await GetHourMinute();
-            var menuId = await context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
-                .OrderByDescending(x => x.Priority).Select(x => x.Id).FirstOrDefaultAsync();
+            var menuId = await context.MenuInAreas.Where(x => x.AreaId == areaId).Include(x => x.Menu)
+                .Where(x => x.Menu.SaleMode == modeId && x.Menu.StartHour <= time && x.Menu.EndHour > time)
+                .OrderByDescending(x => x.Menu.Priority).Select(x => x.MenuId).FirstOrDefaultAsync();
+            //context.Menus.Where(x => x.SaleMode == modeId && x.StartHour <= time && x.EndHour > time)
+            //.OrderByDescending(x => x.Priority).Select(x => x.Id).FirstOrDefaultAsync();
             if (menuId == null) throw new Exception("Not found menu");
 
             var listStore = await (from menu in context.Menus

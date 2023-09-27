@@ -55,18 +55,18 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Get list category in menu in realtime by modeId(when click a mode 1 in customer web)
         /// </summary>
         [HttpGet("now/categoies")]
-        public async Task<ActionResult<MenuNotProductView>> GetMenuByModeWithListCategory(string modeId)
+        public async Task<ActionResult<MenuNotProductView>> GetMenuByModeWithListCategory(string modeId, string areaId)
         {
-            return Ok(await repository.Menu.GetMenuByModeAndShowListCategory(modeId));
+            return Ok(await repository.Menu.GetMenuByModeAndShowListCategory(modeId, areaId));
         }
 
         /// <summary>
         /// Get list stores in menu in realtime by modeId(when click a mode 1 in customer web)
         /// </summary>
         [HttpGet("now/storeCategories")]
-        public async Task<ActionResult<StoreInMenuView>> GetMenuByModeWithListStoreCategory(string modeId, int storeCateSize, int storeSize)
+        public async Task<ActionResult<StoreInMenuView>> GetMenuByModeWithListStoreCategory(string modeId, string areaId, int storeCateSize, int storeSize)
         {
-            return Ok(await repository.Menu.GetListStoreCateInMenuNow(modeId, storeCateSize, storeSize));
+            return Ok(await repository.Menu.GetListStoreCateInMenuNow(modeId, areaId, storeCateSize, storeSize));
         }
 
 
@@ -74,9 +74,9 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Get list stores in menu in realtime by modeId(when click a mode 1 in customer web)
         /// </summary>
         [HttpGet("now/stores")]
-        public async Task<ActionResult<StoreInMenuView>> GetMenuByModeWithListStore(string modeId, int page, int pageSize)
+        public async Task<ActionResult<StoreInMenuView>> GetMenuByModeWithListStore(string modeId, string areaId, int page, int pageSize)
         {
-            return Ok(await repository.Menu.GetListStoreInMenuNow(modeId, page, pageSize));
+            return Ok(await repository.Menu.GetListStoreInMenuNow(modeId, areaId, page, pageSize));
         }
 
         /// <summary>

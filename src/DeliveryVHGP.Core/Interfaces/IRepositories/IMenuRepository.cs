@@ -13,9 +13,9 @@ namespace DeliveryVHGP.Core.Interface.IRepositories
         Task<List<MenuView>> GetListMenuByModeIdForCustomer(string modeId, string areaId);
         Task<MenuViewModel> Filter(string KeySearch, string menuId, int page, int pageSize); //search
         Task<List<ProductInStoreInMenuVieww>> GetListProductInStoreInMenuByName(string KeySearch, string menuId, int page, int pageSize); // search show list product in store
-        Task<MenuNotProductView> GetMenuByModeAndShowListCategory(string modeId);
-        Task<List<StoreCategoryInMenuView>> GetListStoreCateInMenuNow(string modeId, int storeCateSize, int storeSize);
-        Task<List<StoreInMenuView>> GetListStoreInMenuNow(string modeId, int page, int pageSize);
+        Task<MenuNotProductView> GetMenuByModeAndShowListCategory(string modeId, string areaId);
+        Task<List<StoreCategoryInMenuView>> GetListStoreCateInMenuNow(string modeId, string areaId, int storeCateSize, int storeSize);
+        Task<List<StoreInMenuView>> GetListStoreInMenuNow(string modeId, string areaId, int page, int pageSize);
         Task<MenuView> GetMenuByModeAndGroupByStore(string modeId, string areaId, int page, int pageSize);
         Task<MenuView> GetMenuByModeAndGroupByCategory(string modeId, string areaId, int page, int pageSize);
         Task<List<MenuViewMode3>> GetListMenuInMode3(int pageSize); // mode 3
