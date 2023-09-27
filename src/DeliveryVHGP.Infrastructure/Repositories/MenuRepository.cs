@@ -1023,6 +1023,23 @@ namespace DeliveryVHGP.WebApi.Repositories
             return listAreas;
         }
 
+        public async Task RemoveProductFromMenu(string menuId, List<string> listProductId)
+        {
+            var checkMenuId = await context.Menus.FindAsync(menuId);
+            if(checkMenuId == null)
+            {
+                throw new Exception("Menu Id không tồn tại");
+            }
+            foreach (var productId in listProductId) { 
+                var productInMenu = context.ProductInMenus.Where(pm => pm.MenuId == menuId && pm.ProductId == productId).FirstOrDefault();
+                if (productInMenu != null)
+                {
+                    productInMenu.Status = false;
+                }
+            }
+            await context.SaveChangesAsync();
+        }
+
         public async Task<double> GetTime()
         {
             DateTime utcDateTime = DateTime.UtcNow;

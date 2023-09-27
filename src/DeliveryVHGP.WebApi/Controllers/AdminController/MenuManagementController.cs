@@ -98,5 +98,22 @@ namespace DeliveryVHGP.WebApi.Controllers.AdminController
             }
         }
 
+        /// <summary>
+        /// Remove products from a menu
+        /// </summary>
+        [HttpPost("{menuId}/remove-product")]
+        public async Task<ActionResult> RemoveProductFromMenu(string menuId, List<string> listProductId)
+        {
+            try
+            {
+                await repository.Menu.RemoveProductFromMenu(menuId, listProductId);
+            }
+            catch (Exception ex)
+            {
+                return Conflict(ex.Message);
+            }
+            return Ok();
+        }
+
     }
 }
