@@ -27,6 +27,7 @@ namespace DeliveryVHGP.Core.Interfaces
         IOrderTaskRepository OrderTask { get; }
         IAccountBuildingRepository AccountBuilding { get; }
         IFeedbackRepository Feedback { get; }
+        ISupplierRepository Supplier { get; }
     }
 
 }
