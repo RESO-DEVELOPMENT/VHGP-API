@@ -238,51 +238,5 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
-
-        /// <summary>
-        /// Create a order (store owner web)
-        /// </summary>
-        //POST: api/v1/create-order
-        [HttpPost("create-order")]
-        public async Task<ActionResult> CreatNewOrder(String id, OrderDto order)
-        {
-            try
-            {
-
-                var accountCheck = await repository.Account.CheckAccount(id);
-                if (accountCheck == null)
-                {
-                    return Ok(new
-                    {
-                        StatusCode = "Fail",
-                        message = "Account không tồn tại"
-                    });
-                }
-                else if (accountCheck.RoleId != "2")
-                {
-                    return Ok(new
-                    {
-                        StatusCode = "Fail",
-                        message = "Role của account không hợp lệ"
-                    });
-                }
-                var result = await repository.Order.CreatNewOrder(order);
-                if (result != null)
-                {
-                    await repository.Segment.CreatSegment(result);
-                }
-
-                return Ok(new { StatusCode = "Successful", data = result });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    StatusCode = "Fail",
-                    message = ex.Message
-                });
-            }
-        }
-
     }
 }

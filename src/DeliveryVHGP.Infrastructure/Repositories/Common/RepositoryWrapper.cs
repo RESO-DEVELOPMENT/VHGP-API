@@ -45,6 +45,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories.Common
             OrderTask = new OrderTaskRepository(_context);
             AccountBuilding = new AccountBuildingRepository(_context);
             Feedback = new FeedbackRepository(_context);
+            Supplier = new SupplierRepository(_context);
             _notificationService = notificationService;
         }
         public IMenuRepository Menu { get; private set; }
@@ -81,5 +82,6 @@ namespace DeliveryVHGP.Infrastructure.Repositories.Common
         public IOrderTaskRepository OrderTask { get; private set; }
         public IAccountBuildingRepository AccountBuilding { get; private set; }
         public IFeedbackRepository Feedback { get; private set; }
+        public ISupplierRepository Supplier { get; private set; }
     }
 }
