@@ -80,7 +80,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             result.Status = brand.Status;
 
             BrandStatus brandStatus;
-            if(Enum.TryParse(brand.Status, out brandStatus)) 
+            if (Enum.TryParse(brand.Status, out brandStatus))
             {
                 result.Status = brandStatus.ToString();
             }
