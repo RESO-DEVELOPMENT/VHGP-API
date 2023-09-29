@@ -9,6 +9,6 @@ namespace DeliveryVHGP.Core.Enums
     public enum StoreCategoryStatus
     {
         Active,
-        Deactive
+        Inactive
     }
 }
