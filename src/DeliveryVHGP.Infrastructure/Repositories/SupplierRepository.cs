@@ -54,12 +54,12 @@ namespace DeliveryVHGP.WebApi.Repositories
                 ShipCost = (float)ShipCostEnum.BillOfLanding, // Default: BillOfLanding = 8000
                 DeliveryTimeId = order.DeliveryTimeId,
                 ServiceId = "1", // Default: giao hang nhanh
-                Status = (int)OrderStatusEnum.Received // Shop accept
+                Status = (int)OrderStatusEnum.Assigning // Shop accept and add to segment
             };
 
             string time = await GetTime();
 
-            var actionReviceHistory = new OrderActionHistory()// Beacause Store not need accept orrder, so order status change to next status
+            var actionReviceHistory = new OrderActionHistory()
             {
                 Id = Guid.NewGuid().ToString(),
                 OrderId = od.Id,
