@@ -456,12 +456,49 @@ namespace DeliveryVHGP.WebApi.Repositories
 
                                   }
                                   ).OrderByDescending(t => t.Time).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            
+            var listOrder2 = await (from order in context.Orders
+                                    join s in context.Stores on order.StoreId equals s.Id
+                                    //join c in context.Customers on order.CustomerId equals c.Id
+                                    join h in context.OrderActionHistories on order.Id equals h.OrderId
+                                    join b in context.Buildings on order.BuildingId equals b.Id
+                                    // join p in context.Payments on order.Id equals p.OrderId
+                                    // join m in context.Menus on order.MenuId equals m.Id
+                                    //join sp in context.Shippers on order.ShipperId equals sp.Id
+                                    join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
+                                    where s.Id == StoreId 
+                                    // && modeId == m.SaleMode && h.ToStatus == 0
+                                    && (order.Status == (int)OrderStatusEnum.New || order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.Assigning || order.Status == (int)OrderStatusEnum.Accepted)
+                                    where h.CreateDate.ToString().Contains(request.DateFilter)
+                                    select new OrderAdminDtoInStore()
+                                    {
+                                        Id = order.Id,
+                                        Total = order.Total,
+                                        StoreName = s.Name,
+                                        Phone = order.PhoneNumber,
+                                        Note = order.Note,
+                                        ShipCost = order.ShipCost,
+                                        Status = order.Status,
+                                        CustomerName = order.FullName,
+                                        PaymentName = 1,
+                                        BuildingName = b.Name,
+                                        ModeId = "",
+                                        TimeDuration = dt.Id,
+                                        ToHour = TimeSpan.FromHours((double)dt.ToHour).ToString(@"hh\:mm"),
+                                        FromHour = TimeSpan.FromHours((double)dt.FromHour).ToString(@"hh\:mm"),
+                                        //ShipperName = sp.FullName,
+                                        Time = h.CreateDate,
+                                        Dayfilter = "",
+                                    }
+                                  ).OrderByDescending(t => t.Time).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
             foreach (var or in lstOrder)
             {
                 var countpro = context.OrderDetails.Where(o => o.OrderId == or.Id).Count();
                 or.CountProduct = countpro.ToString();
 
             }
+
             foreach (var order in lstOrder)
             {
                 var listShipper = await (from od in context.ShipperHistories
@@ -476,7 +513,23 @@ namespace DeliveryVHGP.WebApi.Repositories
                                          }).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
                 order.ListShipper = listShipper;
             }
-            return lstOrder;
+
+            foreach (var order in listOrder2)
+            {
+                var listShipper = await (from od in context.ShipperHistories
+                                         join o in context.Orders on od.OrderId equals o.Id
+                                         join s in context.Shippers on od.ShipperId equals s.Id
+                                         where o.Id == order.Id
+                                         select new ViewListShipper()
+                                         {
+                                             ShipperId = od.ShipperId,
+                                             Phone = s.Phone,
+                                             ShipperName = s.FullName
+                                         }).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                order.ListShipper = listShipper;
+            }
+
+            return lstOrder.Concat(listOrder2).ToList();
         }
         public async Task<List<OrderAdminDtoInStore>> GetListOrderPreparingsByStore(string StoreId, int pageIndex, int pageSize)
         {
