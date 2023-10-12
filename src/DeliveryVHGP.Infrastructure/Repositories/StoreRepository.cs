@@ -479,6 +479,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 order.ListShipper = listShipper;
             }
 
+            // get list bill of landing
             var listOrder2 = await (from order in context.Orders
                                     join s in context.Stores on order.StoreId equals s.Id
                                     //join c in context.Customers on order.CustomerId equals c.Id
@@ -488,7 +489,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                     // join m in context.Menus on order.MenuId equals m.Id
                                     //join sp in context.Shippers on order.ShipperId equals sp.Id
                                     join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
-                                    where s.Id == StoreId
+                                    where s.Id == StoreId && h.ToStatus == 0
                                     // && modeId == m.SaleMode && h.ToStatus == 0
                                     && (order.Status == (int)OrderStatusEnum.New || order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.Assigning || order.Status == (int)OrderStatusEnum.Accepted)
                                     where h.CreateDate.ToString().Contains(request.DateFilter)
