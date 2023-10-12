@@ -141,9 +141,9 @@ namespace DeliveryVHGP.WebApi.Repositories
                                       join h in context.OrderActionHistories on order.Id equals h.OrderId
                                       join b in context.Buildings on order.BuildingId equals b.Id
                                       join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
-                                      where h.ToStatus == 0 &&
+                                      where h.ToStatus == 0 && order.MenuId == null
                                       //&& p.Type.ToString().Contains(request.SearchByPayment)
-                                      (request.SearchByStatus == -1 || order.Status == request.SearchByStatus)
+                                      && (request.SearchByStatus == -1 || order.Status == request.SearchByStatus)
                                       && (request.SearchByMode == "" || request.SearchByMode == "1")
                                       && order.PhoneNumber.Contains(request.SearchByPhone)
                                       //&& order.Status == request.SearchByStatus
@@ -765,7 +765,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                   join h in context.OrderActionHistories on order.Id equals h.OrderId
                                   join b in context.Buildings on order.BuildingId equals b.Id
                                   join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
-                                  where s.Id == StoreId && h.ToStatus == 0
+                                  where s.Id == StoreId && h.ToStatus == 0 && order.MenuId == null
                                   select new OrderAdminDto()
                                   {
                                       Id = order.Id,
