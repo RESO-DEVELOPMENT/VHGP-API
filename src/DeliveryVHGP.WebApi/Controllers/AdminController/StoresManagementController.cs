@@ -130,7 +130,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             if (storeId == null)
                 return NotFound();
             return Ok(listOder);
-        }
+        } 
         /// <summary>
         /// Create a new store
         /// </summary>

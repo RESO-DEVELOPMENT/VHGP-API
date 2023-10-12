@@ -706,7 +706,35 @@ namespace DeliveryVHGP.WebApi.Repositories
 
                                   }
                                   ).OrderByDescending(t => t.Time).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            return lstOrder;
+
+            var listBillOfLanding = await (from order in context.Orders
+                                  join s in context.Stores on order.StoreId equals s.Id
+                                  join h in context.OrderActionHistories on order.Id equals h.OrderId
+                                  join b in context.Buildings on order.BuildingId equals b.Id
+                                  join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
+                                  where s.Id == StoreId
+                                  select new OrderAdminDto()
+                                  {
+                                      Id = order.Id,
+                                      Total = order.Total,
+                                      StoreName = s.Name,
+                                      Phone = order.PhoneNumber,
+                                      Note = order.Note,
+                                      ShipCost = order.ShipCost,
+                                      Status = order.Status,
+                                      CustomerName = order.FullName,
+                                      PaymentName = 1,
+                                      PaymentStatus = 1,
+                                      BuildingName = b.Name,
+                                      ModeId = "1",
+                                      //ShipperName = sp.FullName,
+                                      Time = h.CreateDate,
+                                      TimeDuration = dt.Id,
+                                      Dayfilter = "",
+                                  }
+                                ).OrderByDescending(t => t.Time).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return lstOrder.Concat(listBillOfLanding).OrderByDescending(t => t.Time).Take(pageSize).ToList();
         }
         public async Task<List<OrderAdminDto>> GetListOrdersByStoreByStatus(string StoreId, int StatusId, int pageIndex, int pageSize)
         {
@@ -751,7 +779,6 @@ namespace DeliveryVHGP.WebApi.Repositories
                                join odd in context.OrderDetails on o.Id equals odd.OrderId
                                join b in context.Buildings on o.BuildingId equals b.Id
                                join s in context.Stores on o.StoreId equals s.Id
-                               join bs in context.Buildings on s.BuildingId equals bs.Id
                                join m in context.Menus on o.MenuId equals m.Id
                                //join pm in context.ProductInMenus on od.ProductInMenuId equals pm.Id
                                join h in context.OrderActionHistories on o.Id equals h.OrderId
@@ -772,7 +799,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                    PaymentStatus = p.Status,
                                    //StoreId= o.StoreId,
                                    StoreName = s.Name,
-                                   StoreBuilding = bs.Name,
+                                   StoreBuilding = b.Name,
                                    //ShipperName = ship.FullName,
                                    //ShipperPhone = ship.Phone,
                                    ServiceId = o.ServiceId,
@@ -789,8 +816,89 @@ namespace DeliveryVHGP.WebApi.Repositories
                                 ).FirstOrDefaultAsync();
             if (order == null)
             {
-                throw new KeyNotFoundException();
+                // Get Bill of Landing
+                var billOfLanding = await (from o in context.Orders
+                                           join b in context.Buildings on o.BuildingId equals b.Id
+                                           join s in context.Stores on o.StoreId equals s.Id
+                                           join h in context.OrderActionHistories on o.Id equals h.OrderId
+                                           join dt in context.DeliveryTimeFrames on o.DeliveryTimeId equals dt.Id
+                                           where (o.Id == orderId)
+                                           select new OrderDetailModel()
+                                           {
+                                               Id = o.Id,
+                                               Total = o.Total,
+                                               Time = h.CreateDate,
+                                               //PaymentId = p.Id,
+                                               FullName = o.FullName,
+                                               PhoneNumber = o.PhoneNumber,
+                                               PaymentName = 1,
+                                               PaymentStatus = 1,
+                                               //StoreId= o.StoreId,
+                                               StoreName = s.Name,
+                                               StoreBuilding = b.Name,
+                                               //ShipperName = ship.FullName,
+                                               //ShipperPhone = ship.Phone,
+                                               ServiceId = o.ServiceId,
+                                               ModeId = "1",
+                                               BuildingName = b.Name,
+                                               Note = o.Note,
+                                               ShipCost = o.ShipCost,
+                                               TimeDuration = dt.Id,
+                                               ToHour = TimeSpan.FromHours((double)dt.ToHour).ToString(@"hh\:mm"),
+                                               FromHour = TimeSpan.FromHours((double)dt.FromHour).ToString(@"hh\:mm"),
+                                               Dayfilter = "",
+                                               MessageFail = o.MessageFail
+                                           }
+                                ).FirstOrDefaultAsync();
+
+                if (billOfLanding == null)
+                {
+                    throw new KeyNotFoundException();
+                }
+
+                var listPro1 = await (from o in context.Orders
+                                     join odd in context.OrderDetails on o.Id equals odd.OrderId
+                                     join pm in context.Products on odd.ProductId equals pm.Id
+                                     where o.Id == orderId
+                                     select new ViewListDetail
+                                     {
+                                         ProductId = odd.ProductId,
+                                         Price = odd.Price,
+                                         Quantity = odd.Quantity,
+                                         ProductName = odd.ProductName,
+                                     }).ToListAsync();
+                billOfLanding.ListProInMenu = listPro1;
+
+                var listStatus1 = await (from o in context.Orders
+                                        join h in context.OrderActionHistories on o.Id equals h.OrderId
+                                        where h.OrderId == orderId
+                                        select new ListStatusOrder
+                                        {
+                                            Status = h.ToStatus,//status
+                                            Time = h.CreateDate
+                                        }
+                                    ).OrderBy(t => t.Status).ToListAsync();
+                billOfLanding.ListStatusOrder = listStatus1;
+
+                var listShipper1 = await (from sm in context.SegmentDeliveryRoutes
+                                         join s in context.Shippers on sm.ShipperId equals s.Id
+                                         join r in context.RouteEdges on sm.Id equals r.RouteId
+                                         join oa in context.OrderActions on r.Id equals oa.RouteEdgeId
+                                         join o in context.Orders on oa.OrderId equals o.Id
+                                         //leftJOi sh in context.ShipperHistories on s.Id equals sh.ShipperId
+                                         where o.Id == orderId && (oa.OrderActionType == (int)OrderActionEnum.PickupStore || oa.OrderActionType == (int)OrderActionEnum.DeliveryCus)
+                                         select new ViewListShipp()
+                                         {
+                                             ShipperId = sm.ShipperId,
+                                             Phone = s.Phone,
+                                             ShipperName = s.FullName,
+                                             OrderActionType = oa.OrderActionType
+                                         }).OrderBy(t => t.OrderActionType).ToListAsync();
+                billOfLanding.ListShipper = listShipper1;
+
+                return billOfLanding;
             }
+
             var listPro = await (from o in context.Orders
                                  join odd in context.OrderDetails on o.Id equals odd.OrderId
                                  join pm in context.Products on odd.ProductId equals pm.Id

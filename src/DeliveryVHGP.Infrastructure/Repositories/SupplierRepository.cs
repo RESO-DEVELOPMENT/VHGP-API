@@ -59,17 +59,29 @@ namespace DeliveryVHGP.WebApi.Repositories
 
             string time = await GetTime();
 
-            var actionReviceHistory = new OrderActionHistory()
+
+            var actionReviceHistoryNew = new OrderActionHistory()
             {
                 Id = Guid.NewGuid().ToString(),
                 OrderId = od.Id,
                 FromStatus = (int)OrderStatusEnum.New,
-                ToStatus = (int)OrderStatusEnum.Received,
+                ToStatus = (int)OrderStatusEnum.New,
                 CreateDate = DateTime.UtcNow.AddHours(7),
                 TypeId = "1"
             };
 
-            await context.OrderActionHistories.AddAsync(actionReviceHistory);
+            var actionReviceHistoryAssigning = new OrderActionHistory()
+            {
+                Id = Guid.NewGuid().ToString(),
+                OrderId = od.Id,
+                FromStatus = (int)OrderStatusEnum.New,
+                ToStatus = (int)OrderStatusEnum.Assigning,
+                CreateDate = DateTime.UtcNow.AddHours(7),
+                TypeId = "1"
+            };
+
+            await context.OrderActionHistories.AddAsync(actionReviceHistoryNew);
+            await context.OrderActionHistories.AddAsync(actionReviceHistoryAssigning);
 
             await context.Orders.AddAsync(od);
 
@@ -92,6 +104,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 Total = order.Total,
                 PhoneNumber = order?.PhoneNumber,
                 FullName = order?.FullName,
+                Note = order?.Note,
             };
         }
 
