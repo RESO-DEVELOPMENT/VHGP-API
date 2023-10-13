@@ -350,8 +350,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                   join b in context.Buildings on order.BuildingId equals b.Id
                                   join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
                                   where s.Id == StoreId && h.ToStatus == 0 && (order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery || order.Status == (int)InProcessStatus.AtHub || order.Status == (int)InProcessStatus.CustomerDelivery)
-                                  && order.MenuId == null
-                                           select new OrderAdminDtoInStore()
+                                  select new OrderAdminDtoInStore()
                                   {
                                       Id = order.Id,
                                       Total = order.Total,
@@ -438,7 +437,6 @@ namespace DeliveryVHGP.WebApi.Repositories
                                   join b in context.Buildings on order.BuildingId equals b.Id
                                   join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
                                   where s.Id == StoreId && h.ToStatus == 0 && h.CreateDate.ToString().Contains(request.DateFilter) && (order.Status == (int)OrderStatusEnum.Completed || order.Status == (int)OrderStatusEnum.Fail || order.Status == (int)FailStatus.CustomerFail || order.Status == (int)FailStatus.OutTime || order.Status == (int)FailStatus.StoreFail || order.Status == (int)FailStatus.ShipperFail)
-                                  && order.MenuId == null 
                                   select new OrderAdminDtoInStore()
                                   {
                                       Id = order.Id,
@@ -557,7 +555,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                         // join m in context.Menus on order.MenuId equals m.Id
                                         //join sp in context.Shippers on order.ShipperId equals sp.Id
                                         join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
-                                        where s.Id == StoreId && h.ToStatus == 0 && order.MenuId == null
+                                        where s.Id == StoreId && h.ToStatus == 0
                                         // && modeId == m.SaleMode && h.ToStatus == 0
                                         && (order.Status == (int)OrderStatusEnum.New || order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.Assigning || order.Status == (int)OrderStatusEnum.Accepted)
                                         where h.CreateDate.ToString().Contains(request.DateFilter)
@@ -650,8 +648,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                                   join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
                                   //join sp in context.Shippers on order.ShipperId equals sp.Id
                                   where s.Id == StoreId && h.ToStatus == 0 && (order.Status == (int)OrderStatusEnum.Accepted || order.Status == (int)OrderStatusEnum.New || order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.Assigning)
-                                  && order.MenuId == null
-                                           select new OrderAdminDtoInStore()
+
+                                  select new OrderAdminDtoInStore()
                                   {
                                       Id = order.Id,
                                       Total = order.Total,
