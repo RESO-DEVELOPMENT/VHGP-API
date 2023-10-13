@@ -76,10 +76,14 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                         //duplicate query
                         //totalAdvance += await context.Orders.Where(x => x.Id == order.Id).Select(x => x.Total).FirstOrDefaultAsync();
                         totalAdvance += order.Total;
-                        if (order.Payments.First().Type == (int)PaymentEnum.Cash)
+                        if (order.MenuId != null && order.Payments.First().Type == (int)PaymentEnum.Cash)
                         {
                             totalCod += order.Total + order.ShipCost;
                             Console.WriteLine(totalCod);
+                        }
+                        if (order.MenuId == null)
+                        {
+                            totalCod += order.Total + order.ShipCost;
                         }
                     }
                     
