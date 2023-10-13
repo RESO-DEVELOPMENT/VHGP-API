@@ -1303,16 +1303,17 @@ namespace DeliveryVHGP.WebApi.Repositories
             var time = Double.Parse(DateTime.UtcNow.AddHours(7).ToString("HH.mm"));
             DateTime date = DateTime.UtcNow.AddHours(7).Date;
             var listOrder = await context.Orders.Include(x => x.OrderCache)//.Include(x => x.OrderActionHistories)
-                .Where(x => x.Status == (int)OrderStatusEnum.Received && (x.Menu.SaleMode == "1"
+                .Where(x => (x.Status == (int)OrderStatusEnum.Received && (x.Menu.SaleMode == "1"
                              || (x.Menu.SaleMode == "2" && x.DeliveryTime.FromHour <= time)
                              || (x.Menu.SaleMode == "3" && x.Menu.DayFilter <= date && x.DeliveryTime.FromHour <= time)
                              ) && (x.Payments.FirstOrDefault().Type == (int)PaymentEnum.Cash
                                 || (x.Payments.FirstOrDefault().Type == (int)PaymentEnum.VNPay && x.Payments.FirstOrDefault().Status == (int)PaymentStatusEnum.successful)
-                                )
+                                )) 
                              //&& x.OrderCache != null
+                             || (x.Status == (int)OrderStatusEnum.Assigning && x.MenuId == null)
                              )
                 .Take(100).ToListAsync(); //improve performace take 100 Select(x => x.Id)
-            //Console.WriteLine("Order date: " + listOrder[0].OrderActionHistories.First().CreateDate.ToString());
+
             var list = listOrder.Where(x => x.OrderCache == null).Select(x => x.Id).ToList();
             return list;
         }

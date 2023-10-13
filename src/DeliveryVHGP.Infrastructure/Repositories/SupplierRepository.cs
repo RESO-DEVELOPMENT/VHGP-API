@@ -70,20 +70,22 @@ namespace DeliveryVHGP.WebApi.Repositories
                 TypeId = "1"
             };
 
-            var actionReviceHistoryAssigning = new OrderActionHistory()
+            var actionReviceHistoryReceived = new OrderActionHistory()
             {
                 Id = Guid.NewGuid().ToString(),
                 OrderId = od.Id,
                 FromStatus = (int)OrderStatusEnum.New,
-                ToStatus = (int)OrderStatusEnum.Assigning,
+                ToStatus = (int)OrderStatusEnum.Received,
                 CreateDate = DateTime.UtcNow.AddHours(7),
                 TypeId = "1"
             };
 
-            await context.OrderActionHistories.AddAsync(actionReviceHistoryNew);
-            await context.OrderActionHistories.AddAsync(actionReviceHistoryAssigning);
-
+            // Add new bill of landing (new order)
             await context.Orders.AddAsync(od);
+
+            // Add order action history (new -> new, new -> received)
+            await context.OrderActionHistories.AddAsync(actionReviceHistoryNew);
+            await context.OrderActionHistories.AddAsync(actionReviceHistoryReceived);
 
             try
             {
