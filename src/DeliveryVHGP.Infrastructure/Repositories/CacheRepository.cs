@@ -21,10 +21,14 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             foreach (var order in listOrder)
             {
                 var menu = await context.Menus.Where(x => x.Id == order.MenuId).FirstOrDefaultAsync();
-                int? saleMode = Int32.Parse(menu.SaleMode);
-                if (saleMode == null)
+                int? saleMode = 1;
+                if (menu != null)
                 {
-                    saleMode = 1;
+                    saleMode = Int32.Parse(menu.SaleMode);
+                    if (saleMode == null)
+                    {
+                        saleMode = 1;
+                    }
                 }
                 OrderCache cache = new OrderCache() { Id = Guid.NewGuid().ToString(), OrderId = order.Id, MenuSaleMode = saleMode, CreateAt = DateTime.UtcNow.AddHours(7), UpdateAt = DateTime.UtcNow.AddHours(7), IsReady = true };
                 listCaches.Add(cache);
@@ -56,7 +60,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             if (mode == 1)
             {
                 listOrerId = await context.OrderCaches.Where(x => x.IsReady == true && x.MenuSaleMode == 1)
-                    .OrderBy(x => x.CreateAt).Select(x => x.OrderId).Take(size).ToListAsync();
+                    .OrderBy(x => x.CreateAt).Select(x => x.OrderId).Take(100).ToListAsync();
             }
             if (mode == 2)
             {
