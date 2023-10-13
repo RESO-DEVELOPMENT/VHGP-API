@@ -189,8 +189,8 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             }
             try
             {
-                await context.AddRangeAsync(listRoute);
-                await context.AddRangeAsync(listAction);
+                await context.SegmentDeliveryRoutes.AddRangeAsync(listRoute);
+                await context.OrderActions.AddRangeAsync(listAction);
                 await context.SaveChangesAsync();
             }
             catch
