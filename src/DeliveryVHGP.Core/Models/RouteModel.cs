@@ -6,6 +6,8 @@ namespace DeliveryVHGP.Core.Models
     public class RouteModel
     {
         [FirestoreProperty]
+        public string OrderId { get; set; }
+        [FirestoreProperty]
         public string RouteId { get; set; }
         [FirestoreProperty]
         public string FirstEdge { get; set; }
