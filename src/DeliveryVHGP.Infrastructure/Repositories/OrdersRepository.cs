@@ -141,7 +141,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                                       join h in context.OrderActionHistories on order.Id equals h.OrderId
                                       join b in context.Buildings on order.BuildingId equals b.Id
                                       join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
-                                      where h.ToStatus == 0 &&
+                                               join p in context.Payments on order.Id equals p.OrderId
+                                               where h.ToStatus == 0 &&
                                       //&& p.Type.ToString().Contains(request.SearchByPayment)
                                       (request.SearchByStatus == -1 || order.Status == request.SearchByStatus)
                                       && (request.SearchByMode == "" || request.SearchByMode == "1")
@@ -156,8 +157,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                                           Note = order.Note,
                                           ShipCost = order.ShipCost,
                                           CustomerName = order.FullName,
-                                          PaymentName = 1,
-                                          PaymentStatus = 1,
+                                          PaymentName = p.Type,
+                                          PaymentStatus = p.Status,
                                           BuildingName = b.Name,
                                           ModeId = "1",
                                           //ShipperName = sp.FullName,

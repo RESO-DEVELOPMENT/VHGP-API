@@ -20,7 +20,7 @@ namespace DeliveryVHGP.WebApi.Repositories
         private readonly IFileService _fileService;
 
         public SupplierRepository(DeliveryVHGP_DBContext context) : base(context)
-        {  
+        {
         }
 
         public async Task<OrderDto> CreateNewBillOfLanding(string supplierId, BillOfLandingDto order)
@@ -42,16 +42,17 @@ namespace DeliveryVHGP.WebApi.Repositories
             }
 
             //var shipCost = await context.Menus.Where(x => x.Id == order.MenuId).Select(x => x.ShipCost).FirstOrDefaultAsync();
+            var total = order.Total - (float)ShipCostEnum.BillOfLanding;
+
             var od = new Order
             {
                 Id = orderId,
-                Total = order.Total,
+                Total = total,
                 StoreId = store.Id,
                 BuildingId = order.BuildingId,
                 Note = order.Note,
                 FullName = order.FullName,
                 PhoneNumber = order.PhoneNumber,
-                ShipCost = (float)ShipCostEnum.BillOfLanding, // Default: BillOfLanding = 8000
                 DeliveryTimeId = order.DeliveryTimeId,
                 ServiceId = "1", // Default: giao hang nhanh
                 Status = (int)OrderStatusEnum.Assigning // Shop accept and add to segment
@@ -80,12 +81,34 @@ namespace DeliveryVHGP.WebApi.Repositories
                 TypeId = "1"
             };
 
+            var type = 0;
+            var status = 0;
+            if (order.PaymentType == 0)
+            {
+                type = (int)PaymentEnum.Cash;
+                status = (int)PaymentStatusEnum.unpaid;
+            } else if (order.PaymentType == 1)
+            {
+                type = (int)PaymentEnum.VNPay;
+                status = (int)PaymentStatusEnum.successful;
+            }
+
+            var payment = new Payment()
+            {
+                Id = Guid.NewGuid().ToString(),
+                OrderId = od.Id,
+                Amount = total,
+                Type = type,
+                Status = status,
+            };
+
             // Add new bill of landing (new order)
             await context.Orders.AddAsync(od);
 
             // Add order action history (new -> new, new -> received)
             await context.OrderActionHistories.AddAsync(actionReviceHistoryNew);
             await context.OrderActionHistories.AddAsync(actionReviceHistoryReceived);
+            await context.Payments.AddAsync(payment);
 
             try
             {
@@ -96,14 +119,15 @@ namespace DeliveryVHGP.WebApi.Repositories
                 throw new Exception();
             }
 
-            return new OrderDto {
+            return new OrderDto
+            {
                 Id = orderId,
                 StoreId = supplierId,
                 BuildingId = order.BuildingId,
-                DeliveryTimeId =order.DeliveryTimeId,
+                DeliveryTimeId = order.DeliveryTimeId,
                 ServiceId = "1",
                 ModeId = "1",
-                Total = order.Total,
+                Total = total,
                 PhoneNumber = order?.PhoneNumber,
                 FullName = order?.FullName,
                 Note = order?.Note,
