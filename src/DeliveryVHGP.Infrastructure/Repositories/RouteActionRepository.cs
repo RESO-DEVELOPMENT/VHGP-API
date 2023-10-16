@@ -29,25 +29,26 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 .Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
                 .Where(x => x.Status == (int)RouteStatusEnum.NotAssign || x.Status == (int)RouteStatusEnum.ToDo)
                 .ToListAsync();
+
             if (listRoute.Count() > 0)
             {
                 foreach (var route in listRoute)
                 {
                     double? totalAdvance = 0;
                     double? totalCod = 0;
-                    RouteModel routeModel = new RouteModel() 
-                    { 
-                        RouteId = route.Id, 
-                        EdgeNum = route.RouteEdges.Count(), 
-                        ShipperId = route.ShipperId, 
-                        Type = route.Type, 
+                    RouteModel routeModel = new RouteModel()
+                    {
+                        RouteId = route.Id,
+                        EdgeNum = route.RouteEdges.Count(),
+                        ShipperId = route.ShipperId,
+                        Type = route.Type,
                         Status = route.Status,
                     };
 
                     var first = route.RouteEdges
                         .Where(x => x.Priority == 1).Select(x => x.ToBuildingId).FirstOrDefault();
                     var last = route.RouteEdges
-                        .OrderByDescending(x => x.Priority).Select(x => x.ToBuildingId).FirstOrDefault();               
+                        .OrderByDescending(x => x.Priority).Select(x => x.ToBuildingId).FirstOrDefault();
                     var buildingNameFirst = await context.Buildings
                         .Where(x => x.Id == first).Select(x => x.Name).FirstOrDefaultAsync();
                     var buildingNameLast = await context.Buildings
@@ -58,6 +59,10 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                     List<OrderAction> orderActions = new List<OrderAction>();
                     foreach (var edge in route.RouteEdges)
                     {
+                        if (edge.OrderActions.Any())
+                        {
+                            routeModel.OrderId = edge.OrderActions.First().OrderId;
+                        }
                         orderActions.AddRange(edge.OrderActions);
                     }
                     var listOrderAction = orderActions.GroupBy(x => x.OrderId).Select(x => x.First()).ToList();
@@ -81,12 +86,13 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                             totalCod += order.Total + order.ShipCost;
                             Console.WriteLine(totalCod);
                         }
-                        if (order.MenuId == null){
-                            totalCod+=order.Total + order.ShipCost;
+                        if (order.MenuId == null)
+                        {
+                            totalCod += order.Total + order.ShipCost;
                         }
                     }
 
-                    
+
 
                     /*foreach (var action in orderActions)
                     {
