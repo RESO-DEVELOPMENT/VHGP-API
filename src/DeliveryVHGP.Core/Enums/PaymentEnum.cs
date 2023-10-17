@@ -9,7 +9,8 @@ namespace DeliveryVHGP.Core.Enums
     public enum PaymentEnum
     {
         Cash = 0,
-        VNPay = 1
+        VNPay = 1,
+        Paid = 2,
     }
     public enum PaymentStatusEnum
     {
