@@ -103,6 +103,7 @@ namespace DeliveryVHGP.WebApi.Repositories
 
             // Add new bill of landing (new order)
             await context.Orders.AddAsync(od);
+            await context.Payments.AddAsync(payment);
 
             // Add order action history (new -> new, new -> received)
             await context.OrderActionHistories.AddAsync(actionReviceHistoryNew);
