@@ -61,10 +61,10 @@ namespace DeliveryVHGP.WebApi.Repositories
 
             var status = 0;
 
-            if (order.Payment == 0)
+            if (order.PaymentType == 0)
             {
                 status = (int) PaymentStatusEnum.unpaid;
-            } else if (order.Payment == 1)
+            } else if (order.PaymentType == 1)
             {
                 status = (int) PaymentStatusEnum.successful;
             }
