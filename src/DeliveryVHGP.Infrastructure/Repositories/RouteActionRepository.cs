@@ -80,16 +80,24 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                         }
                         //duplicate query
                         //totalAdvance += await context.Orders.Where(x => x.Id == order.Id).Select(x => x.Total).FirstOrDefaultAsync();
-                        totalAdvance += order.Total;
+                        totalAdvance += order.Total + order.ShipCost;
                         if (order.MenuId != null && order.Payments.First().Type == (int)PaymentEnum.Cash)
                         {
                             totalCod += order.Total + order.ShipCost;
-                            Console.WriteLine(totalCod);
                         }
+
+                       
                         if (order.MenuId == null)
                         {
-                            totalCod += order.Total + order.ShipCost;
-                        }
+                            if (order.Payments.Any())
+                            {
+                                if (order.Payments.First().Status == (int)PaymentStatusEnum.unpaid)
+                                    totalCod += order.Total + order.ShipCost;
+                                else if (order.Payments.First().Status == (int)PaymentStatusEnum.successful)
+                                    totalCod += 0;
+                            }
+                           
+                        }  
                     }
 
 
@@ -121,7 +129,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                     listRouteModel.Add(routeModel);
                 }
             }
-            return listRouteModel;
+            return listRouteModel.OrderByDescending(r => r.OrderId).ToList();
         }
         public async Task<int> CreateRoute(List<SegmentDeliveryRoute> route, List<SegmentModel> listSegments)
         {

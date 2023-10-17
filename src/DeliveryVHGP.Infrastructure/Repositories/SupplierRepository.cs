@@ -41,39 +41,44 @@ namespace DeliveryVHGP.WebApi.Repositories
                 throw new Exception("Đơn hàng không hợp lệ");
             }
 
-            var total = order.Total - (float)ShipCostEnum.BillOfLanding;
-
             //var shipCost = await context.Menus.Where(x => x.Id == order.MenuId).Select(x => x.ShipCost).FirstOrDefaultAsync();
             var od = new Order
             {
                 Id = orderId,
-                Total = total,
+                Total = order.Total,
                 StoreId = store.Id,
                 BuildingId = order.BuildingId,
                 Note = order.Note,
                 FullName = order.FullName,
                 PhoneNumber = order.PhoneNumber,
-                ShipCost = (float)ShipCostEnum.BillOfLanding, // Default: BillOfLanding = 8000
+                ShipCost = (float) order.ShipCost, 
                 DeliveryTimeId = order.DeliveryTimeId,
                 ServiceId = "1", // Default: giao hang nhanh
                 Status = (int)OrderStatusEnum.Assigning // Shop accept and add to segment
             };
 
+            var type = 0;
             var status = 0;
 
             if (order.PaymentType == 0)
             {
+                type = (int)PaymentEnum.Cash;
                 status = (int) PaymentStatusEnum.unpaid;
             } else if (order.PaymentType == 1)
             {
+                type = (int)PaymentEnum.VNPay;
                 status = (int) PaymentStatusEnum.successful;
+            } else if (order.PaymentType == 2)
+            {
+                type = (int)PaymentEnum.Paid;
+                status = (int)PaymentStatusEnum.successful;
             }
 
             var payment = new Payment()
             {
                 Id = Guid.NewGuid().ToString(),
-                Amount = total,
-                Type = 0,
+                Amount = order.Total,
+                Type = type,
                 Status = status,
                 OrderId = orderId
             };
