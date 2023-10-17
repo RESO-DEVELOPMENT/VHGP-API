@@ -20,7 +20,7 @@ namespace DeliveryVHGP.WebApi.Repositories
         private readonly IFileService _fileService;
 
         public SupplierRepository(DeliveryVHGP_DBContext context) : base(context)
-        {  
+        {
         }
 
         public async Task<OrderDto> CreateNewBillOfLanding(string supplierId, BillOfLandingDto order)
@@ -41,11 +41,13 @@ namespace DeliveryVHGP.WebApi.Repositories
                 throw new Exception("Đơn hàng không hợp lệ");
             }
 
+            var total = order.Total - (float)ShipCostEnum.BillOfLanding;
+
             //var shipCost = await context.Menus.Where(x => x.Id == order.MenuId).Select(x => x.ShipCost).FirstOrDefaultAsync();
             var od = new Order
             {
                 Id = orderId,
-                Total = order.Total,
+                Total = total,
                 StoreId = store.Id,
                 BuildingId = order.BuildingId,
                 Note = order.Note,
@@ -55,6 +57,25 @@ namespace DeliveryVHGP.WebApi.Repositories
                 DeliveryTimeId = order.DeliveryTimeId,
                 ServiceId = "1", // Default: giao hang nhanh
                 Status = (int)OrderStatusEnum.Assigning // Shop accept and add to segment
+            };
+
+            var status = 0;
+
+            if (order.Payment == 0)
+            {
+                status = (int) PaymentStatusEnum.unpaid;
+            } else if (order.Payment == 1)
+            {
+                status = (int) PaymentStatusEnum.successful;
+            }
+
+            var payment = new Payment()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Amount = total,
+                Type = 0,
+                Status = status,
+                OrderId = orderId
             };
 
             string time = await GetTime();
@@ -96,11 +117,12 @@ namespace DeliveryVHGP.WebApi.Repositories
                 throw new Exception();
             }
 
-            return new OrderDto {
+            return new OrderDto
+            {
                 Id = orderId,
                 StoreId = supplierId,
                 BuildingId = order.BuildingId,
-                DeliveryTimeId =order.DeliveryTimeId,
+                DeliveryTimeId = order.DeliveryTimeId,
                 ServiceId = "1",
                 ModeId = "1",
                 Total = order.Total,
