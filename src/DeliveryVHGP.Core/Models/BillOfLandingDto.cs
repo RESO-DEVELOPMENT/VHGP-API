@@ -11,6 +11,7 @@
         public string? FullName { get; set; }
         // public double? ShipCost { get; set; }
         public string? DeliveryTimeId { get; set; }
+        public int? Payment { get; set; }
         // public string? ServiceId { get; set; }
         //public string? ModeId { get; set; }
 
