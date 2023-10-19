@@ -1540,13 +1540,19 @@ namespace DeliveryVHGP.WebApi.Repositories
                     {
                         if (actionType == (int)OrderActionEnum.DeliveryCus)
                         {
-                            tran.Amount = order.ShipCost - shipFeePercent * 2 * order.ShipCost;
+                           
 
                             if (order.Payments.Any())
                             {
                                 if (order.Payments.FirstOrDefault().Status == (int) PaymentStatusEnum.unpaid)
                                 {
                                     tran.Amount = order.Total + order.ShipCost;
+                                    debitWallet.Amount += order.Total + order.ShipCost;
+                                } 
+                                else if (order.Payments.FirstOrDefault().Status == (int)PaymentStatusEnum.successful)
+                                {
+                                    tran.Amount = 0;
+                                    debitWallet.Amount += 0;
                                 }
                             }
                             tran.Action = (int)TransactionActionEnum.plus; // old: minus
@@ -1554,7 +1560,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                             tran.WalletId = debitWallet.Id;
 
                             await context.AddAsync(tran);
-                            debitWallet.Amount += (order.ShipCost - shipFeePercent * 2 * order.ShipCost);
+                            //debitWallet.Amount += (order.ShipCost - shipFeePercent * 2 * order.ShipCost);z
+                           
                         }
                     }
                     if (order.ServiceId == DeliveryService.NormalService)
