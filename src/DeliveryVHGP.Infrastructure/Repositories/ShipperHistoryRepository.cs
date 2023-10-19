@@ -45,7 +45,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 {
                     Id = history.Id,
                     ServiceName = order.Service.Name,
-                    Total = order.Total,
+                    Total = order.Total + order.ShipCost,
                     ShippingCost = order.ShipCost,
                     RouteType = routeType,
                     ActionType = history.ActionType,
