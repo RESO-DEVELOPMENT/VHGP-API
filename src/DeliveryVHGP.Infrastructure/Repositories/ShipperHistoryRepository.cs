@@ -25,10 +25,14 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 var order = await context.Orders.Include(x => x.Menu).Include(x => x.Service).Where(x => x.Id == history.OrderId).FirstOrDefaultAsync();
                 int routeType = 1;
                 double profit = 0;
-                if (order.Menu.SaleMode == "2" || order.Menu.SaleMode == "3")
+
+                if (order.Menu != null)
                 {
-                    routeType = 2;
-                }
+                    if (order.Menu.SaleMode == "2" || order.Menu.SaleMode == "3")
+                    {
+                        routeType = 2;
+                    }
+                }        
                 if (order.ServiceId == DeliveryService.FastService)
                 {
                     profit = (double)order.ShipCost * ShipFee.ShipperCommission * 2;
