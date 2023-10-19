@@ -1541,9 +1541,18 @@ namespace DeliveryVHGP.WebApi.Repositories
                         if (actionType == (int)OrderActionEnum.DeliveryCus)
                         {
                             tran.Amount = order.ShipCost - shipFeePercent * 2 * order.ShipCost;
+
+                            if (order.Payments.Any())
+                            {
+                                if (order.Payments.FirstOrDefault().Status == (int) PaymentStatusEnum.unpaid)
+                                {
+                                    tran.Amount = order.Total + order.ShipCost;
+                                }
+                            }
                             tran.Action = (int)TransactionActionEnum.plus; // old: minus
                             tran.Type = (int)TransactionTypeEnum.shippingcost;
                             tran.WalletId = debitWallet.Id;
+
                             await context.AddAsync(tran);
                             debitWallet.Amount += (order.ShipCost - shipFeePercent * 2 * order.ShipCost);
                         }
