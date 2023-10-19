@@ -359,7 +359,58 @@ namespace DeliveryVHGP.WebApi.Repositories
                                              }).ToListAsync();
                     order.ListShipper = listShipper;
                 }
-                return lstOrder;
+
+                var listBillOfLanding = await (from order in context.Orders
+                                               join s in context.Stores on order.StoreId equals s.Id
+                                               join h in context.OrderActionHistories on order.Id equals h.OrderId
+                                               join b in context.Buildings on order.BuildingId equals b.Id
+                                               join dt in context.DeliveryTimeFrames on order.DeliveryTimeId equals dt.Id
+                                               join p in context.Payments on order.Id equals p.OrderId
+                                               where h.ToStatus == 0 &&
+                                      //&& p.Type.ToString().Contains(request.SearchByPayment)
+                                      (request.SearchByStatus == -1 || order.Status == request.SearchByStatus)
+                                      && (request.SearchByMode == "" || request.SearchByMode == "1")
+                                      && order.PhoneNumber.Contains(request.SearchByPhone)
+                                               //&& order.Status == request.SearchByStatus
+                                               select new OrderAdminDto()
+                                               {
+                                                   Id = order.Id,
+                                                   Total = order.Total,
+                                                   StoreName = s.Name,
+                                                   Phone = order.PhoneNumber,
+                                                   Note = order.Note,
+                                                   ShipCost = order.ShipCost,
+                                                   CustomerName = order.FullName,
+                                                   PaymentName = p.Type,
+                                                   PaymentStatus = p.Status,
+                                                   BuildingName = b.Name,
+                                                   ModeId = "1",
+                                                   //ShipperName = sp.FullName,
+                                                   Status = order.Status,
+                                                   Time = h.CreateDate,
+                                                   TimeDuration = dt.Id,
+                                                   ToHour = TimeSpan.FromHours((double)dt.ToHour).ToString(@"hh\:mm"),
+                                                   FromHour = TimeSpan.FromHours((double)dt.FromHour).ToString(@"hh\:mm"),
+                                                   Dayfilter = ""
+                                               }
+                                   ).OrderByDescending(t => t.Time).ToListAsync();
+
+                foreach (var order in listBillOfLanding)
+                {
+                    var listShipper = await (from od in context.ShipperHistories
+                                             join o in context.Orders on od.OrderId equals o.Id
+                                             join s in context.Shippers on od.ShipperId equals s.Id
+                                             where o.Id == order.Id
+                                             select new ViewListShipper()
+                                             {
+                                                 ShipperId = od.ShipperId,
+                                                 Phone = s.Phone,
+                                                 ShipperName = s.FullName
+                                             }).ToListAsync();
+                    order.ListShipper = listShipper;
+                }
+
+                return lstOrder.Concat(listBillOfLanding).ToList();
             }
             return null;
         }
