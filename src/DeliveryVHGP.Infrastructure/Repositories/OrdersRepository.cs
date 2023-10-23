@@ -4,6 +4,7 @@ using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Core.Enums;
 using DeliveryVHGP.Core.Interface.IRepositories;
 using DeliveryVHGP.Core.Models;
+using DeliveryVHGP.Core.Utils;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using DeliveryVHGP.Infrastructure.Services;
 using Google.Rpc;
@@ -1369,7 +1370,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             var list = listOrder.Where(x => x.OrderCache == null).Select(x => x.Id).ToList();
             return list;
         }
-        public async Task CompleteOrder(string orderActionId, string shipperId, int actionType)
+        public async Task CompleteOrder(string orderActionId, string shipperId, int actionType, int paymentType)
         {
             var orderAction = await context.OrderActions.Include(x => x.Order).Where(x => x.Id == orderActionId).FirstOrDefaultAsync();
             if (orderAction == null)
@@ -1381,6 +1382,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 throw new Exception("Order not found by action id");
             }
             var service = orderAction.Order.ServiceId;
+
             orderAction.Status = (int)OrderActionStatusEnum.Done;
             if (actionType == (int)OrderActionEnum.PickupStore)
             {
@@ -1431,6 +1433,12 @@ namespace DeliveryVHGP.WebApi.Repositories
             }
             if (actionType == (int)OrderActionEnum.DeliveryCus) // creat shipper history
             {
+                var payment = context.Payments.Where(p => p.OrderId == orderAction.OrderId).FirstOrDefault();
+                var status = Utils.GetPaymentStatus(paymentType);
+
+                payment.Status = status;
+                await context.SaveChangesAsync();
+
                 var order = await OrderUpdateStatus(orderAction.OrderId, (int)OrderStatusEnum.Completed);
                 await RemoveOrderFromCache(orderAction.OrderId);
             }
