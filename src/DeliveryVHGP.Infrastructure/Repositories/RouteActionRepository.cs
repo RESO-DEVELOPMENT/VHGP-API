@@ -70,10 +70,13 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                     routeModel.OrderNum = listOrderAction.Count;
 
                     //query order and amount of money need to pay
-                    var listOrder = await context.Orders.Include(x => x.Payments).
-                        Where(x => listOrderId.Contains(x.Id)).ToListAsync();
+                    var listOrder = await context.Orders.Include(x => x.Payments).Include(x => x.Store).
+                        Where(x => listOrderId.Contains(x.Id)).ToListAsync(); 
+
                     foreach (var order in listOrder)
                     {
+                        routeModel.StoreName = order.Store.Name; 
+
                         if (order.Payments.Any())
                         {
                             Console.WriteLine(order.Id + ": " + order.Payments.First().Type);
