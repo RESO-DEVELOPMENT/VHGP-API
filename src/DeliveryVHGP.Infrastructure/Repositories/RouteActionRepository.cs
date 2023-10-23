@@ -71,11 +71,11 @@ namespace DeliveryVHGP.Infrastructure.Repositories
 
                     //query order and amount of money need to pay
                     var listOrder = await context.Orders.Include(x => x.Payments).Include(x => x.Store).
-                        Where(x => listOrderId.Contains(x.Id)).ToListAsync(); 
+                        Where(x => listOrderId.Contains(x.Id)).ToListAsync();
 
                     foreach (var order in listOrder)
                     {
-                        routeModel.StoreName = order.Store.Name; 
+                        routeModel.FirstEdge = order.Store.Name + ", " + buildingNameFirst;
 
                         if (order.Payments.Any())
                         {
