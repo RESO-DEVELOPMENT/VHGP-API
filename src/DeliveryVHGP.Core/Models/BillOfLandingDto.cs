@@ -9,7 +9,7 @@
         public string? FullName { get; set; }
         public double? ShipCost { get; set; }
         public string? DeliveryTimeId { get; set; }
-        public int? PaymentType { get; set; }
+        public int PaymentType { get; set; }
 
         //public List<BillProductDetailDto> ProductDetail { get; set; }
         //public List<PaymentDto> Payments { get; set; }

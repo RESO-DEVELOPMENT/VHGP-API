@@ -3,6 +3,7 @@ using DeliveryVHGP.Core.Entities;
 using DeliveryVHGP.Core.Enums;
 using DeliveryVHGP.Core.Interface.IRepositories;
 using DeliveryVHGP.Core.Models;
+using DeliveryVHGP.Core.Utils;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using DeliveryVHGP.Infrastructure.Services;
 using FirebaseAdmin.Auth;
@@ -57,22 +58,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                 Status = (int)OrderStatusEnum.Assigning // Shop accept and add to segment
             };
 
-            var type = 0;
-            var status = 0;
-
-            if (order.PaymentType == 0)
-            {
-                type = (int)PaymentEnum.Cash;
-                status = (int) PaymentStatusEnum.unpaid;
-            } else if (order.PaymentType == 1)
-            {
-                type = (int)PaymentEnum.VNPay;
-                status = (int) PaymentStatusEnum.successful;
-            } else if (order.PaymentType == 2)
-            {
-                type = (int)PaymentEnum.Paid;
-                status = (int)PaymentStatusEnum.successful;
-            }
+            var type = Utils.GetPaymentType(order.PaymentType);
+            var status = Utils.GetPaymentStatus(order.PaymentType);
 
             var payment = new Payment()
             {
