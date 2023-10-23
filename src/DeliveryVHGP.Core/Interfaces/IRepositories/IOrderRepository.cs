@@ -28,7 +28,7 @@ namespace DeliveryVHGP.Core.Interface.IRepositories
         Task<Object> PaymentOrderSuccessfull(string orderId);
         Task<Object> PaymentOrderFalse(string orderId);
         Task<List<string>> CheckAvailableOrder();
-        Task CompleteOrder(string orderActionId, string shipperId, int actionType);
+        Task CompleteOrder(string orderActionId, string shipperId, int actionType, int payment);
         Task CancelOrder(string orderActionId, string shipperId, int actionType, string messageFail);
         Task CancelOrderByAdmin(string orderId, int orderStatus, string messageFail);
         Task CancelOrderByStore(string orderId, string messageFail);
