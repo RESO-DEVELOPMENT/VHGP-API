@@ -26,7 +26,9 @@ namespace DeliveryVHGP.WebApi.Controllers
                 var pro = await repository.Order.GetAll(pageIndex, pageSize, request);
                 var order = await repository.Order.GetAllOrder(request);
                 int total = order.Count();
-                return Ok(new { TotalOrder = total, data = pro });
+                var startOrder = ((pageIndex - 1) * pageSize) + 1;
+                var endOrder = ((pageIndex - 1) * pageSize) + pageSize;
+                return Ok(new { TotalOrder = total, StartOrder = startOrder, EndOrder = endOrder, Data = pro });
 
             }
             catch
