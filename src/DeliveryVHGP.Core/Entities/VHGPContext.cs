@@ -919,7 +919,11 @@ namespace DeliveryVHGP.Core.Entities
 
                 entity.Property(e => e.Image).HasMaxLength(250);
 
+                entity.Property(e => e.Latitude).HasMaxLength(255);
+
                 entity.Property(e => e.LicensePlates).HasMaxLength(50);
+
+                entity.Property(e => e.Longitude).HasMaxLength(255);
 
                 entity.Property(e => e.Phone).HasMaxLength(50);
 
