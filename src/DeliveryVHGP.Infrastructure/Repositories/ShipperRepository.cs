@@ -148,7 +148,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             var result = await context.Shippers.FindAsync(shipId);
             var account = context.Accounts.FirstOrDefault(x => x.Id == shipId);
 
-            if(result == null)
+            if (result == null)
             {
                 return null;
             }
@@ -175,7 +175,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             if (Enum.TryParse(ship.Status, out newShipperStatus))
             {
                 result.Status = newShipperStatus.ToString();
-            } 
+            }
             else
             {
                 result.Status = ShipperStatus.Active.ToString();
@@ -200,7 +200,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                 if (edge != null)
                 {
                     var oAction = context.OrderActions.FirstOrDefault(oa => oa.RouteEdgeId == edge.Id);
-                    if(oAction != null)
+                    if (oAction != null)
                     {
                         var order = context.Orders.FirstOrDefault(x => x.Id == oAction.OrderId);
                         if (order != null)
@@ -211,7 +211,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                             {
                                 result.Status = shipper.Status;
                             }
-                            if ( order.Status == (int)OrderStatusEnum.Accepted || order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery
+                            if (order.Status == (int)OrderStatusEnum.Accepted || order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery
                                  || order.Status == (int)InProcessStatus.CustomerDelivery)
                                 throw new Exception("Hiện tại đang có đơn hàng chưa hoàn thành!!!" +
                                                              "Vui lòng kiểm tra lại đơn hàng và thử lại");
@@ -223,7 +223,7 @@ namespace DeliveryVHGP.WebApi.Repositories
             {
                 result.Status = shipper.Status;
             }
-                try
+            try
             {
                 context.Entry(result).State = EntityState.Modified;
                 await context.SaveChangesAsync();
@@ -262,7 +262,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                 context.Shippers.Remove(deShip);
                                 context.Transactions.RemoveRange(tran);
                             }
-                            if ( order.Status == (int)OrderStatusEnum.Accepted || order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery
+                            if (order.Status == (int)OrderStatusEnum.Accepted || order.Status == (int)OrderStatusEnum.InProcess || order.Status == (int)InProcessStatus.HubDelivery
                                  || order.Status == (int)InProcessStatus.CustomerDelivery)
                                 throw new Exception("Hiện tại đang có đơn hàng chưa hoàn thành!!" +
                                                              "Vui lòng kiểm tra lại đơn hàng và thử lại");
@@ -281,6 +281,44 @@ namespace DeliveryVHGP.WebApi.Repositories
             await context.SaveChangesAsync();
 
             return deShip;
+        }
+
+        public async Task<ShipperLocationModel> UpdateCurrentLocation(ShipperLocationModel shipperLocationModel)
+        {
+            var shipper = await context.Shippers.Where(x => x.Id == shipperLocationModel.Id).FirstOrDefaultAsync();
+            if (shipper == null)
+            {
+                throw new Exception("Shipper Id does not exist");
+            }
+
+
+            shipper.Latitude = shipperLocationModel.Latitude;
+            shipper.Longitude = shipperLocationModel.Longitude;
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch
+            {
+                throw;
+            }
+
+            return shipperLocationModel;
+        }
+
+        public async Task<ShipperLocationModel> GetCurrentLocation(string shipperId) {
+            var shipper = await context.Shippers.Where(x => x.Id == shipperId).FirstOrDefaultAsync();
+            if (shipper == null)
+            {
+                throw new Exception("Shipper Id does not exist");
+            }
+            return new ShipperLocationModel
+            {
+                Id = shipperId,
+                Latitude = shipper.Latitude,
+                Longitude = shipper.Longitude
+            };
         }
     }
 }

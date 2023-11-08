@@ -13,5 +13,7 @@ namespace DeliveryVHGP.Core.Interface.IRepositories
         Task<ShipperDto> UpdateShipper(string shipId, ShipperDto ship, Boolean imgUpdate);
         Task<StatusShipDto> UpdateStatusShipper(string ShipId, StatusShipDto shipper);
         Task<Object> DeleteShipper(string shipperId);
+        Task<ShipperLocationModel> UpdateCurrentLocation(ShipperLocationModel shipperLocationModel);
+        Task<ShipperLocationModel> GetCurrentLocation(string shipperId);
     }
 }
