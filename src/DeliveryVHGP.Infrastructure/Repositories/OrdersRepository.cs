@@ -7,6 +7,7 @@ using DeliveryVHGP.Core.Models;
 using DeliveryVHGP.Infrastructure.Repositories.Common;
 using DeliveryVHGP.Infrastructure.Services;
 using Google.Rpc;
+using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using static DeliveryVHGP.Core.Models.OrderAdminDto;
 
@@ -927,6 +928,7 @@ namespace DeliveryVHGP.WebApi.Repositories
                                            join s in context.Stores on o.StoreId equals s.Id
                                            join h in context.OrderActionHistories on o.Id equals h.OrderId
                                            join dt in context.DeliveryTimeFrames on o.DeliveryTimeId equals dt.Id
+                                           join p in context.Payments on o.Id equals p.OrderId
                                            where (o.Id == orderId) && h.ToStatus == 0
                                            select new OrderDetailModel()
                                            {
@@ -936,8 +938,8 @@ namespace DeliveryVHGP.WebApi.Repositories
                                                //PaymentId = p.Id,
                                                FullName = o.FullName,
                                                PhoneNumber = o.PhoneNumber,
-                                               PaymentName = 1,
-                                               PaymentStatus = 1,
+                                               PaymentName = p.Type,
+                                               PaymentStatus = p.Status,
                                                //StoreId= o.StoreId,
                                                StoreName = s.Name,
                                                StoreBuilding = b.Name,
@@ -1473,6 +1475,66 @@ namespace DeliveryVHGP.WebApi.Repositories
             await CreateShipperHistory(shipperId, orderAction.OrderId, actionType, (int)StatusEnum.fail);
             await RemoveOrderFromCache(orderAction.OrderId);
         }
+
+        public async Task UpdateOrderByAdmin(string orderId, OrderUpdateModel orderUpdateModel)
+        {
+            var updatedOrder = await context.Orders.Where(o => o.Id == orderId).SingleOrDefaultAsync();
+            if (updatedOrder == null) throw new Exception("Invalid Order Id");
+
+            try
+            {
+                /* if (orderUpdateModel.BuildingId != null && orderUpdateModel.BuildingId != "")
+                {
+                    var building = await context.Buildings.Where(b => b.Id == orderUpdateModel.BuildingId).FirstOrDefaultAsync();
+                    if (building == null) throw new Exception("Invalid Building Id");
+
+                    updatedOrder.BuildingId = orderUpdateModel.BuildingId;
+                } */
+
+                if (orderUpdateModel.FullName != null && orderUpdateModel.FullName != "")
+                    updatedOrder.FullName = orderUpdateModel.FullName;
+
+                if (orderUpdateModel.PhoneNumber != null && orderUpdateModel.PhoneNumber != "")
+                    updatedOrder.PhoneNumber = orderUpdateModel.PhoneNumber;
+
+                if (orderUpdateModel.Note != null)
+                    updatedOrder.Note = orderUpdateModel.Note;
+
+                if (orderUpdateModel.Total != null)
+                    updatedOrder.Total = orderUpdateModel.Total;
+
+                if (orderUpdateModel.ShipCost != null)
+                    updatedOrder.ShipCost = orderUpdateModel.ShipCost;
+
+                var orderPayment = await context.Payments.Where(p => p.OrderId == orderId).FirstOrDefaultAsync();
+                if (orderPayment != null && orderUpdateModel.PaymentType != null)
+                {
+                    if (orderUpdateModel.PaymentType == (int)PaymentEnum.Cash)
+                    {
+                        orderPayment.Type = (int)PaymentEnum.Cash;
+                        orderPayment.Status = (int)PaymentStatusEnum.unpaid;
+                    }
+                    else if (orderUpdateModel.PaymentType == (int)PaymentEnum.VNPay)
+                    {
+                        orderPayment.Type = (int)PaymentEnum.VNPay;
+                        orderPayment.Status = (int)PaymentStatusEnum.successful;
+                    }
+                    else if (orderUpdateModel.PaymentType == (int)PaymentEnum.Paid)
+                    {
+                        orderPayment.Type = (int)PaymentEnum.Paid;
+                        orderPayment.Status = (int)PaymentStatusEnum.successful;
+                    }
+                };
+
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error: {e}");
+            }
+        }
+
+
         public async Task CancelOrderByAdmin(string orderId, int orderStatus, string messageFail)
         {
             var order = await context.Orders.FindAsync(orderId);

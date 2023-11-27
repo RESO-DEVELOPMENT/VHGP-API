@@ -30,6 +30,7 @@ namespace DeliveryVHGP.Core.Interface.IRepositories
         Task<List<string>> CheckAvailableOrder();
         Task CompleteOrder(string orderActionId, string shipperId, int actionType);
         Task CancelOrder(string orderActionId, string shipperId, int actionType, string messageFail);
+        Task UpdateOrderByAdmin(string orderId, OrderUpdateModel orderUpdateModel);
         Task CancelOrderByAdmin(string orderId, int orderStatus, string messageFail);
         Task CancelOrderByStore(string orderId, string messageFail);
         Task<Object> DeleteOrder();
