@@ -371,6 +371,27 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Update order (admin web)
+        /// </summary>
+        [HttpPut("admin/{orderId}")]
+        public async Task<ActionResult> UpdateOrderByAdmin(string orderId, OrderUpdateModel orderUpdateModel)
+        {
+            try
+            {
+                await repository.Order.UpdateOrderByAdmin(orderId, orderUpdateModel);
+                return Ok(new {StatusCode = "Successful"});
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
+
         [HttpPut("admin/cancel")]
         public async Task<ActionResult> CancelOrderByAdmin(string orderId, int orderStatus, string messageFail)
         {
