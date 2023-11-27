@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using DeliveryVHGP.Core.Interfaces;
 using DeliveryVHGP.Core.Models;
+using Google.Type;
 
 namespace DeliveryVHGP.WebApi.Controllers
 {
@@ -104,6 +105,25 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
+        [HttpPost("{shipperId}/location")]
+        public async Task<ActionResult> GetCurrentLocation(string shipperId)
+        {
+            try
+            {
+                var location = await repository.Shipper.GetCurrentLocation(shipperId);
+                return Ok(location);
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
+
         /// <summary>
         /// Delete for Shipper
         /// </summary>

@@ -335,11 +335,11 @@ namespace DeliveryVHGP.WebApi.Controllers
         }
 
         [HttpPut("complete")]
-        public async Task<ActionResult> CompleteOrder(string orderActionId, string shipperId, int actionType)
+        public async Task<ActionResult> CompleteOrder(string orderActionId, string shipperId, int actionType, int paymentType = 0)
         {
             try
             {
-                await repository.Order.CompleteOrder(orderActionId, shipperId, actionType);
+                await repository.Order.CompleteOrder(orderActionId, shipperId, actionType, paymentType);
                 return Ok(new {StatusCode = "Successful"});
             }
             catch (Exception e)

@@ -25,6 +25,8 @@ namespace DeliveryVHGP.WebApi.Entities
         public string? VehicleType { get; set; }
         public string? LicensePlates { get; set; }
         public string? Colour { get; set; }
+        public string? Latitude { get; set; }
+        public string? Longitude { get; set; }
 
         public virtual ICollection<DeliveryShiftOfShipper> DeliveryShiftOfShippers { get; set; }
         public virtual ICollection<SegmentDeliveryRoute> SegmentDeliveryRoutes { get; set; }

@@ -68,7 +68,7 @@ namespace DeliveryVHGP.DeliveryAlgorithm
                         }
 
                         //Remove route and load new route in firestore
-                        var scopeFireStore = scope.ServiceProvider.GetService<IFirestoreService>();
+                       /* var scopeFireStore = scope.ServiceProvider.GetService<IFirestoreService>();
                         await scopeFireStore.DeleteAllRoutes();
                         List<RouteModel> ListRoute = await scopeRepo.RouteAction.GetCurrentAvalableRoute();
                         if (ListRoute.Count > 0)
@@ -77,7 +77,7 @@ namespace DeliveryVHGP.DeliveryAlgorithm
                                 await scopeFireStore.AddRoute(routeModel);
                             }
                         //await Task.Delay(15000, stoppingToken);
-                        await Task.Delay(30000, stoppingToken);
+                        await Task.Delay(30000, stoppingToken);*/
                     }
                 }
             }

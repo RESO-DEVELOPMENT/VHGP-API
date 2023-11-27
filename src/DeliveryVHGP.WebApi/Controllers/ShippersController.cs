@@ -82,5 +82,23 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
+
+        [HttpPut("location")]
+        public async Task<ActionResult> UpdateCurrentLocation(ShipperLocationModel shipperLocationModel)
+        {
+            try
+            {
+                var location = await repository.Shipper.UpdateCurrentLocation(shipperLocationModel);
+                return Ok(new { StatusCode = "Successful", data = location });
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
     }
 }
