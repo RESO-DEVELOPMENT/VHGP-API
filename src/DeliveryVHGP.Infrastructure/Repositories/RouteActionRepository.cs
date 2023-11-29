@@ -398,7 +398,6 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 Body = "Tài xế đã nhận đơn, vui lòng chuẩn bị đơn hàng"
             };
             await _notificationService.SendNotification(notificationModel);
-            await firestoreService.UpdateRoute(routeId, new RouteUpdateModel { ShipperId = shipperId, Status = (int)RouteStatusEnum.ToDo });
 
         }
         public async Task<List<EdgeModel>> GetListEdgeInRoute(string routeId)

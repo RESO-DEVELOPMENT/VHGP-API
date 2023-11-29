@@ -15,10 +15,8 @@ namespace DeliveryVHGP.WebApi.Repositories
 {
     public class OrdersRepository : RepositoryBase<Order>, IOrderRepository
     {
-        private readonly IFirestoreService firestoreService;
-        public OrdersRepository(DeliveryVHGP_DBContext context, IFirestoreService firestoreService) : base(context)
+        public OrdersRepository(DeliveryVHGP_DBContext context) : base(context)
         {
-            this.firestoreService = firestoreService;
         }
         //Get list order (in admin web)
         public async Task<List<OrderAdminDto>> GetAll(int pageIndex, int pageSize, FilterRequest request)
@@ -1753,7 +1751,6 @@ namespace DeliveryVHGP.WebApi.Repositories
                 {
                     var route = await context.SegmentDeliveryRoutes.FindAsync(action.RouteEdge.RouteId);
                     route.Status = (int)RouteStatusEnum.Done;
-                    await firestoreService.DeleteEm(route.Id);
                 }
                 else// chưa xử lý nếu admin cancel đơn
                 {

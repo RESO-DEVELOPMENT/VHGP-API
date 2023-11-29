@@ -32,7 +32,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories.Common
             Category = new CategoriesRepository(_fileService, _context);
             Collection = new CollectionRepository(_context);
             Customer = new CustomerRepository(_fileService, _context);
-            Order = new OrdersRepository(_context, _firestoreService);
+            Order = new OrdersRepository(_context);
             Product = new ProductRepository(_timeStageService, _fileService, _context);
             Shipper = new ShipperRepository(_timeStageService, _fileService, _context);
             Store = new StoreRepository(_timeStageService, _fileService, _context);
