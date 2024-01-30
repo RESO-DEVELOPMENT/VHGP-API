@@ -17,17 +17,20 @@ namespace DeliveryVHGP.Infrastructure.Repositories
     {
         private readonly IFirestoreService firestoreService;
         private readonly INotificationService _notificationService;
-        public RouteActionRepository(DeliveryVHGP_DBContext context, IFirestoreService firestoreService, INotificationService notificationService) : base(context)
+
+        public RouteActionRepository(DeliveryVHGP_DBContext context, IFirestoreService firestoreService,
+            INotificationService notificationService) : base(context)
         {
             this.firestoreService = firestoreService;
             _notificationService = notificationService;
         }
+
         public async Task<List<RouteModel>> GetCurrentAvalableRoute()
         {
             List<RouteModel> listRouteModel = new List<RouteModel>();
             var listRoute = await context.SegmentDeliveryRoutes
                 .Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
-                .Where(x => x.Status == (int)RouteStatusEnum.NotAssign || x.Status == (int)RouteStatusEnum.ToDo)
+                .Where(x => x.Status == (int) RouteStatusEnum.NotAssign || x.Status == (int) RouteStatusEnum.ToDo)
                 .ToListAsync();
 
             if (listRoute.Count() > 0)
@@ -54,8 +57,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                     var buildingNameLast = await context.Buildings
                         .Where(x => x.Id == last).Select(x => x.Name).FirstOrDefaultAsync();
 
-                    routeModel.FirstEdge = buildingNameFirst;
-                    routeModel.LastEdge = buildingNameLast;
+
                     List<OrderAction> orderActions = new List<OrderAction>();
                     foreach (var edge in route.RouteEdges)
                     {
@@ -63,43 +65,50 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                         {
                             routeModel.OrderId = edge.OrderActions.First().OrderId;
                         }
+
                         orderActions.AddRange(edge.OrderActions);
                     }
+
                     var listOrderAction = orderActions.GroupBy(x => x.OrderId).Select(x => x.First()).ToList();
                     var listOrderId = listOrderAction.Select(x => x.OrderId).ToList(); //lunavtran
                     routeModel.OrderNum = listOrderAction.Count;
 
                     //query order and amount of money need to pay
-                    var listOrder = await context.Orders.Include(x => x.Payments).
-                        Where(x => listOrderId.Contains(x.Id)).ToListAsync();
+                    var listOrder = await context.Orders.Include(x => x.Payments).Include(s => s.Store)
+                        .Where(x => listOrderId.Contains(x.Id))
+                        .ToListAsync();
+
+                    var fromStore = "";
+                    var toUser = "";
                     foreach (var order in listOrder)
                     {
+                        fromStore = order.Store?.Name;
+                        toUser = order.FullName;
                         if (order.Payments.Any())
                         {
                             Console.WriteLine(order.Id + ": " + order.Payments.First().Type);
                         }
+
                         //duplicate query
                         //totalAdvance += await context.Orders.Where(x => x.Id == order.Id).Select(x => x.Total).FirstOrDefaultAsync();
                         totalAdvance += order.Total + order.ShipCost;
-                        if (order.MenuId != null && order.Payments.First().Type == (int)PaymentEnum.Cash)
+                        if (order.MenuId != null && order.Payments.First().Type == (int) PaymentEnum.Cash)
                         {
                             totalCod += order.Total + order.ShipCost;
                         }
 
-                       
+
                         if (order.MenuId == null)
                         {
                             if (order.Payments.Any())
                             {
-                                if (order.Payments.First().Status == (int)PaymentStatusEnum.unpaid)
+                                if (order.Payments.First().Status == (int) PaymentStatusEnum.unpaid)
                                     totalCod += order.Total + order.ShipCost;
-                                else if (order.Payments.First().Status == (int)PaymentStatusEnum.successful)
+                                else if (order.Payments.First().Status == (int) PaymentStatusEnum.successful)
                                     totalCod += 0;
                             }
-                           
-                        }  
+                        }
                     }
-
 
 
                     /*foreach (var action in orderActions)
@@ -123,14 +132,17 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                             totalCod += (orderAction.Order.Total + orderAction.Order.ShipCost);
                         }
                     }*/
-
+                    routeModel.FirstEdge = $"{fromStore},{buildingNameFirst}";
+                    routeModel.LastEdge = $"{toUser},{buildingNameLast}";
                     routeModel.TotalAdvance = totalAdvance;
                     routeModel.TotalCod = totalCod;
                     listRouteModel.Add(routeModel);
                 }
             }
+
             return listRouteModel.OrderByDescending(r => r.OrderId).ToList();
         }
+
         public async Task<int> CreateRoute(List<SegmentDeliveryRoute> route, List<SegmentModel> listSegments)
         {
             try
@@ -144,42 +156,67 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 return 0;
             }
         }
+
         public async Task<int> CreateSingleRoute(List<SegmentModel> listSegments)
         {
             var buildings = System.Enum.GetValues(typeof(BuildingEnum))
-                        .Cast<BuildingEnum>()
-                        .Select(d => (d, (int)d))
-                        .ToList();
+                .Cast<BuildingEnum>()
+                .Select(d => (d, (int) d))
+                .ToList();
             List<SegmentDeliveryRoute> listRoute = new List<SegmentDeliveryRoute>();
             List<OrderAction> listAction = new List<OrderAction>();
 
             foreach (var segment in listSegments)
             {
                 double totalDistance = 0;
-                SegmentDeliveryRoute route = new SegmentDeliveryRoute() { Id = Guid.NewGuid().ToString(), Type = (int)RouteTypeEnum.DeliveryFood, Status = (int)RouteStatusEnum.NotAssign, Description = "Mode 1" };
+                SegmentDeliveryRoute route = new SegmentDeliveryRoute()
+                {
+                    Id = Guid.NewGuid().ToString(), Type = (int) RouteTypeEnum.DeliveryFood,
+                    Status = (int) RouteStatusEnum.NotAssign, Description = "Mode 1"
+                };
                 List<RouteEdge> listEdge = new List<RouteEdge>();
 
-                RouteEdge edgePickUp = new RouteEdge() { Id = Guid.NewGuid().ToString(), FromBuildingId = "", ToBuildingId = segment.fromBuilding, Priority = 1, Distance = 0, RouteId = route.Id, Status = (int)EdgeStatusEnum.NotYet };
-                RouteEdge edgeDelivery = new RouteEdge() { Id = Guid.NewGuid().ToString(), FromBuildingId = segment.fromBuilding, ToBuildingId = segment.toBuilding, Priority = 2, RouteId = route.Id, Status = (int)EdgeStatusEnum.NotYet };
+                RouteEdge edgePickUp = new RouteEdge()
+                {
+                    Id = Guid.NewGuid().ToString(), FromBuildingId = "", ToBuildingId = segment.fromBuilding,
+                    Priority = 1, Distance = 0, RouteId = route.Id, Status = (int) EdgeStatusEnum.NotYet
+                };
+                RouteEdge edgeDelivery = new RouteEdge()
+                {
+                    Id = Guid.NewGuid().ToString(), FromBuildingId = segment.fromBuilding,
+                    ToBuildingId = segment.toBuilding, Priority = 2, RouteId = route.Id,
+                    Status = (int) EdgeStatusEnum.NotYet
+                };
                 edgeDelivery.Distance = 0;
-                OrderAction actionPickUp = new OrderAction() { Id = Guid.NewGuid().ToString(), RouteEdgeId = edgePickUp.Id, OrderId = segment.OrderId, Status = (int)OrderActionStatusEnum.Todo };
-                OrderAction actionDelivery = new OrderAction() { Id = Guid.NewGuid().ToString(), RouteEdgeId = edgeDelivery.Id, OrderId = segment.OrderId, Status = (int)OrderActionStatusEnum.Todo };
+                OrderAction actionPickUp = new OrderAction()
+                {
+                    Id = Guid.NewGuid().ToString(), RouteEdgeId = edgePickUp.Id, OrderId = segment.OrderId,
+                    Status = (int) OrderActionStatusEnum.Todo
+                };
+                OrderAction actionDelivery = new OrderAction()
+                {
+                    Id = Guid.NewGuid().ToString(), RouteEdgeId = edgeDelivery.Id, OrderId = segment.OrderId,
+                    Status = (int) OrderActionStatusEnum.Todo
+                };
 
-                if (segment.SegmentMode == (int)SegmentModeEnum.StoreToHub)
+                if (segment.SegmentMode == (int) SegmentModeEnum.StoreToHub)
                 {
-                    actionPickUp.OrderActionType = (int)OrderActionEnum.PickupStore;
-                    actionDelivery.OrderActionType = (int)OrderActionEnum.DeliveryHub;
+                    actionPickUp.OrderActionType = (int) OrderActionEnum.PickupStore;
+                    actionDelivery.OrderActionType = (int) OrderActionEnum.DeliveryHub;
                 }
-                if (segment.SegmentMode == (int)SegmentModeEnum.HubToCus)
+
+                if (segment.SegmentMode == (int) SegmentModeEnum.HubToCus)
                 {
-                    actionPickUp.OrderActionType = (int)OrderActionEnum.PickupHub;
-                    actionDelivery.OrderActionType = (int)OrderActionEnum.DeliveryCus;
+                    actionPickUp.OrderActionType = (int) OrderActionEnum.PickupHub;
+                    actionDelivery.OrderActionType = (int) OrderActionEnum.DeliveryCus;
                 }
-                if (segment.SegmentMode == (int)SegmentModeEnum.StoreToCus)
+
+                if (segment.SegmentMode == (int) SegmentModeEnum.StoreToCus)
                 {
-                    actionPickUp.OrderActionType = (int)OrderActionEnum.PickupStore;
-                    actionDelivery.OrderActionType = (int)OrderActionEnum.DeliveryCus;
+                    actionPickUp.OrderActionType = (int) OrderActionEnum.PickupStore;
+                    actionDelivery.OrderActionType = (int) OrderActionEnum.DeliveryCus;
                 }
+
                 int bu1 = 0, bu2 = 0;
                 foreach (var build in buildings)
                 {
@@ -192,9 +229,10 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                         bu2 = build.Item2 - 1;
                     }
                 }
+
                 //this code using distanceMatrixData dummy data => Cause Error
                 //edgeDelivery.Distance = DistanceMatrix.distanceMatrixData[bu1, bu2];
-                totalDistance = (double)edgeDelivery.Distance;
+                totalDistance = (double) edgeDelivery.Distance;
 
                 listAction.Add(actionDelivery);
                 listAction.Add(actionPickUp);
@@ -205,6 +243,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 route.Distance = totalDistance;
                 listRoute.Add(route);
             }
+
             try
             {
                 await context.SegmentDeliveryRoutes.AddRangeAsync(listRoute);
@@ -215,83 +254,80 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             {
                 return 0;
             }
+
             return 1;
         }
+
         public async Task CreateActionOrder(List<NodeModel> listNode, List<SegmentModel> listSegments)
         {
             List<OrderAction> listAction = new List<OrderAction>();
             foreach (var node in listNode)
             {
-                foreach (var segment in listSegments)// from: pickup, to: delivery
+                foreach (var segment in listSegments) // from: pickup, to: delivery
                 {
-                    OrderAction action = new OrderAction() { Id = Guid.NewGuid().ToString(), RouteEdgeId = node.EdgeId, OrderId = segment.OrderId, Status = (int)OrderActionStatusEnum.Todo };
+                    OrderAction action = new OrderAction()
+                    {
+                        Id = Guid.NewGuid().ToString(), RouteEdgeId = node.EdgeId, OrderId = segment.OrderId,
+                        Status = (int) OrderActionStatusEnum.Todo
+                    };
 
                     //----------------------------------------------
-                    if (node.Type == (int)EdgeTypeEnum.Pickup)
+                    if (node.Type == (int) EdgeTypeEnum.Pickup)
                     {
-                        if (segment.fromBuilding.Equals(node.ToBuildingId) && (segment.SegmentMode == (int)SegmentModeEnum.StoreToHub || segment.SegmentMode == (int)SegmentModeEnum.StoreToCus))
+                        if (segment.fromBuilding.Equals(node.ToBuildingId) &&
+                            (segment.SegmentMode == (int) SegmentModeEnum.StoreToHub ||
+                             segment.SegmentMode == (int) SegmentModeEnum.StoreToCus))
                         {
                             //pickup store
-                            action.OrderActionType = (int)OrderActionEnum.PickupStore;
+                            action.OrderActionType = (int) OrderActionEnum.PickupStore;
                             listAction.Add(action);
                         }
-                        if (segment.fromBuilding.Equals(node.ToBuildingId) && segment.SegmentMode == (int)SegmentModeEnum.HubToCus)
+
+                        if (segment.fromBuilding.Equals(node.ToBuildingId) &&
+                            segment.SegmentMode == (int) SegmentModeEnum.HubToCus)
                         {
                             //pickup hub
-                            action.OrderActionType = (int)OrderActionEnum.PickupHub;
+                            action.OrderActionType = (int) OrderActionEnum.PickupHub;
                             listAction.Add(action);
                         }
                     }
-                    if (node.Type == (int)EdgeTypeEnum.Delivery)
+
+                    if (node.Type == (int) EdgeTypeEnum.Delivery)
                     {
-                        if (segment.toBuilding.Equals(node.ToBuildingId) && segment.SegmentMode == (int)SegmentModeEnum.StoreToHub)
+                        if (segment.toBuilding.Equals(node.ToBuildingId) &&
+                            segment.SegmentMode == (int) SegmentModeEnum.StoreToHub)
                         {
                             //delivery hub
-                            action.OrderActionType = (int)OrderActionEnum.DeliveryHub;
+                            action.OrderActionType = (int) OrderActionEnum.DeliveryHub;
                             listAction.Add(action);
                         }
-                        if (segment.toBuilding.Equals(node.ToBuildingId) && (segment.SegmentMode == (int)SegmentModeEnum.HubToCus || segment.SegmentMode == (int)SegmentModeEnum.StoreToCus))
+
+                        if (segment.toBuilding.Equals(node.ToBuildingId) &&
+                            (segment.SegmentMode == (int) SegmentModeEnum.HubToCus ||
+                             segment.SegmentMode == (int) SegmentModeEnum.StoreToCus))
                         {
                             //delivery customer
-                            action.OrderActionType = (int)OrderActionEnum.DeliveryCus;
+                            action.OrderActionType = (int) OrderActionEnum.DeliveryCus;
                             listAction.Add(action);
                         }
                     }
                 }
             }
+
             if (listAction.Count > 0)
             {
                 await context.AddRangeAsync(listAction);
                 await context.SaveChangesAsync();
             }
         }
+
         public async Task RemoveRouteActionNotShipper(int routeType)
         {
             List<RouteEdge> listEdge = new List<RouteEdge>();
             List<OrderAction> listAction = new List<OrderAction>();
-            var listRouteAction = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
-                .Where(x => x.Status == (int)RouteStatusEnum.NotAssign && (x.Type == routeType || x.Type == null)).ToListAsync();
-            if (listRouteAction.Count > 0)
-            {
-                foreach (var route in listRouteAction)
-                {
-                    listEdge.AddRange(route.RouteEdges.ToList());
-                }
-                foreach (var edge in listEdge)
-                {
-                    listAction.AddRange(edge.OrderActions.ToList());
-                }
-                context.RemoveRange(listRouteAction);
-                context.RemoveRange(listEdge);
-                context.RemoveRange(listAction);
-                await context.SaveChangesAsync();
-            }
-        }
-        public async Task RemoveAllRouteAction()// to test
-        {
-            List<RouteEdge> listEdge = new List<RouteEdge>();
-            List<OrderAction> listAction = new List<OrderAction>();
-            var listRouteAction = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
+            var listRouteAction = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges)
+                .ThenInclude(r => r.OrderActions)
+                .Where(x => x.Status == (int) RouteStatusEnum.NotAssign && (x.Type == routeType || x.Type == null))
                 .ToListAsync();
             if (listRouteAction.Count > 0)
             {
@@ -299,16 +335,45 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 {
                     listEdge.AddRange(route.RouteEdges.ToList());
                 }
+
                 foreach (var edge in listEdge)
                 {
                     listAction.AddRange(edge.OrderActions.ToList());
                 }
+
                 context.RemoveRange(listRouteAction);
                 context.RemoveRange(listEdge);
                 context.RemoveRange(listAction);
                 await context.SaveChangesAsync();
             }
         }
+
+        public async Task RemoveAllRouteAction() // to test
+        {
+            List<RouteEdge> listEdge = new List<RouteEdge>();
+            List<OrderAction> listAction = new List<OrderAction>();
+            var listRouteAction = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges)
+                .ThenInclude(r => r.OrderActions)
+                .ToListAsync();
+            if (listRouteAction.Count > 0)
+            {
+                foreach (var route in listRouteAction)
+                {
+                    listEdge.AddRange(route.RouteEdges.ToList());
+                }
+
+                foreach (var edge in listEdge)
+                {
+                    listAction.AddRange(edge.OrderActions.ToList());
+                }
+
+                context.RemoveRange(listRouteAction);
+                context.RemoveRange(listEdge);
+                context.RemoveRange(listAction);
+                await context.SaveChangesAsync();
+            }
+        }
+
         public async Task AcceptRouteByShipper(string routeId, string shipperId)
         {
             //luanvtran
@@ -319,7 +384,8 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             //}
 
             var route = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
-                .Where(x => x.Id == routeId && x.ShipperId == null && x.Status == (int)RouteStatusEnum.NotAssign).FirstOrDefaultAsync();
+                .Where(x => x.Id == routeId && x.ShipperId == null && x.Status == (int) RouteStatusEnum.NotAssign)
+                .FirstOrDefaultAsync();
             /*string originalRouteId = routeId;
             var route = await context.SegmentDeliveryRoutes.Include(x => x.RouteEdges).ThenInclude(r => r.OrderActions)
                 .Where(x => x.Id == originalRouteId && x.ShipperId == null).FirstOrDefaultAsync();*/
@@ -327,17 +393,19 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             {
                 throw new Exception("Shipper is accepted order");
             }
+
             route.ShipperId = shipperId;
-            route.Status = (int)RouteStatusEnum.ToDo;
+            route.Status = (int) RouteStatusEnum.ToDo;
             List<OrderAction> orderActions = new List<OrderAction>();
             foreach (var edge in route.RouteEdges)
             {
                 orderActions.AddRange(edge.OrderActions);
                 if (edge.Priority == 1)
                 {
-                    edge.Status = (int)EdgeStatusEnum.ToDo;
+                    edge.Status = (int) EdgeStatusEnum.ToDo;
                 }
             }
+
             var listOrderAction = orderActions.GroupBy(x => x.OrderId).Select(x => x.First()).ToList();
             var listOrderId = listOrderAction.Select(x => x.OrderId).ToList();
 
@@ -346,30 +414,31 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             listOrderCache.ForEach(x => x.IsReady = false);
             foreach (var order in listOrder)
             {
-                if (order.Status == (int)OrderStatusEnum.Received || order.Status == (int)OrderStatusEnum.Assigning)
+                if (order.Status == (int) OrderStatusEnum.Received || order.Status == (int) OrderStatusEnum.Assigning)
                 {
-                    order.Status = (int)OrderStatusEnum.Accepted;
+                    order.Status = (int) OrderStatusEnum.Accepted;
                     var actionHistory = new OrderActionHistory()
                     {
                         Id = Guid.NewGuid().ToString(),
                         OrderId = order.Id,
-                        FromStatus = (int)OrderStatusEnum.Assigning,
-                        ToStatus = (int)OrderStatusEnum.Accepted,
+                        FromStatus = (int) OrderStatusEnum.Assigning,
+                        ToStatus = (int) OrderStatusEnum.Accepted,
                         CreateDate = DateTime.UtcNow.AddHours(7),
                         TypeId = "1"
                     };
                     await context.OrderActionHistories.AddAsync(actionHistory);
                 }
+
                 //luanvtran
-                if (order.Status == (int)InProcessStatus.AtHub)
+                if (order.Status == (int) InProcessStatus.AtHub)
                 {
-                    order.Status = (int)InProcessStatus.CustomerDelivery;
+                    order.Status = (int) InProcessStatus.CustomerDelivery;
                     var actionHistory = new OrderActionHistory()
                     {
                         Id = Guid.NewGuid().ToString(),
                         OrderId = order.Id,
-                        FromStatus = (int)InProcessStatus.AtHub,
-                        ToStatus = (int)InProcessStatus.CustomerDelivery,
+                        FromStatus = (int) InProcessStatus.AtHub,
+                        ToStatus = (int) InProcessStatus.CustomerDelivery,
                         CreateDate = DateTime.UtcNow.AddHours(7),
                         TypeId = "1"
                     };
@@ -377,10 +446,13 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 }
                 //
             }
+
             await context.SaveChangesAsync();
 
             var listStore = listOrder.GroupBy(x => x.StoreId).Select(x => x.First()).ToList();
-            var listStoreId = listStore.Where(x => x.Status == (int)OrderStatusEnum.Accepted || x.Status == (int)OrderStatusEnum.Assigning).Select(x => x.StoreId).ToList();
+            var listStoreId = listStore
+                .Where(x => x.Status == (int) OrderStatusEnum.Accepted || x.Status == (int) OrderStatusEnum.Assigning)
+                .Select(x => x.StoreId).ToList();
             List<string> tokens = new List<string>();
             foreach (var id in listStoreId)
             {
@@ -390,6 +462,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                     tokens.AddRange(user.fcmToken);
                 }
             }
+
             NotificationModel notificationModel = new NotificationModel()
             {
                 DeviceId = tokens,
@@ -398,19 +471,22 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 Body = "Tài xế đã nhận đơn, vui lòng chuẩn bị đơn hàng"
             };
             await _notificationService.SendNotification(notificationModel);
-
         }
+
         public async Task<List<EdgeModel>> GetListEdgeInRoute(string routeId)
         {
             var listEdgeModel = new List<EdgeModel>();
-            var listEdge = await context.RouteEdges.Include(x => x.OrderActions).Where(x => x.RouteId == routeId).ToListAsync();
+            var listEdge = await context.RouteEdges.Include(x => x.OrderActions).Where(x => x.RouteId == routeId)
+                .ToListAsync();
             if (listEdge.Count == 0)
             {
                 throw new Exception("Not found route");
             }
+
             foreach (var edge in listEdge)
             {
-                var buildingName = await context.Buildings.Where(x => x.Id == edge.ToBuildingId).Select(x => x.Name).FirstOrDefaultAsync();
+                var buildingName = await context.Buildings.Where(x => x.Id == edge.ToBuildingId).Select(x => x.Name)
+                    .FirstOrDefaultAsync();
                 var edgeModel = new EdgeModel()
                 {
                     Id = edge.Id,
@@ -422,18 +498,23 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 };
                 listEdgeModel.Add(edgeModel);
             }
+
             listEdgeModel = listEdgeModel.OrderBy(x => x.Priority).ToList();
             return listEdgeModel;
         }
+
         public async Task<EdgeModel> GetCurrentEdgeInRoute(string shipperId)
         {
             var edge = await context.RouteEdges.Include(x => x.Route).Include(x => x.OrderActions)
-                .Where(x => x.Route.ShipperId == shipperId && x.Status == (int)EdgeStatusEnum.ToDo && x.Route.Status == (int)RouteStatusEnum.ToDo).FirstOrDefaultAsync();
+                .Where(x => x.Route.ShipperId == shipperId && x.Status == (int) EdgeStatusEnum.ToDo &&
+                            x.Route.Status == (int) RouteStatusEnum.ToDo).FirstOrDefaultAsync();
             if (edge == null)
             {
                 return null;
             }
-            var buildingName = await context.Buildings.Where(x => x.Id == edge.ToBuildingId).Select(x => x.Name).FirstOrDefaultAsync();
+
+            var buildingName = await context.Buildings.Where(x => x.Id == edge.ToBuildingId).Select(x => x.Name)
+                .FirstOrDefaultAsync();
             var edgeModel = new EdgeModel()
             {
                 Id = edge.Id,
@@ -445,14 +526,17 @@ namespace DeliveryVHGP.Infrastructure.Repositories
             };
             return edgeModel;
         }
+
         public async Task<List<OrderActionModel>> GetListOrderAction(string edgeId)
         {
-            var listAction = await context.OrderActions.Include(x => x.Order).ThenInclude(x => x.Payments).Where(x => x.RouteEdgeId == edgeId).ToListAsync();
+            var listAction = await context.OrderActions.Include(x => x.Order).ThenInclude(x => x.Payments)
+                .Where(x => x.RouteEdgeId == edgeId).ToListAsync();
             if (listAction.Count == 0)
             {
                 Console.WriteLine("listAction null");
                 throw new Exception("Not foud egde id");
             }
+
             List<OrderActionModel> listOrderActions = new List<OrderActionModel>();
             foreach (var action in listAction)
             {
@@ -473,26 +557,36 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 //{
                 //    orderActionModel.Total = action.Order.Total;
                 //}
-                if (orderActionModel.PaymentType == (int)PaymentEnum.VNPay && orderActionModel.ActionType == (int)OrderActionEnum.DeliveryCus)
+                if (orderActionModel.PaymentType == (int) PaymentEnum.VNPay &&
+                    orderActionModel.ActionType == (int) OrderActionEnum.DeliveryCus)
                 {
                     orderActionModel.Total = 0;
                 }
-                if (orderActionModel.ActionType == (int)OrderActionEnum.PickupStore)
+
+                if (orderActionModel.ActionType == (int) OrderActionEnum.PickupStore)
                 {
-                    orderActionModel.Name = await context.Stores.Where(x => x.Id == action.Order.StoreId).Select(x => x.Name).FirstOrDefaultAsync();
+                    orderActionModel.Name = await context.Stores.Where(x => x.Id == action.Order.StoreId)
+                        .Select(x => x.Name).FirstOrDefaultAsync();
                 }
-                if (orderActionModel.ActionType == (int)OrderActionEnum.PickupHub || orderActionModel.ActionType == (int)OrderActionEnum.DeliveryHub)
+
+                if (orderActionModel.ActionType == (int) OrderActionEnum.PickupHub ||
+                    orderActionModel.ActionType == (int) OrderActionEnum.DeliveryHub)
                 {
 #pragma warning disable CS8601 // Possible null reference assignment.
-                    orderActionModel.Name = await context.Orders.Include(x => x.Store).ThenInclude(x => x.Building).ThenInclude(x => x.Hub)
-                        .Where(x => x.Id == action.OrderId).Select(x => x.Store.Building.Hub.Name).FirstOrDefaultAsync();
+                    orderActionModel.Name = await context.Orders.Include(x => x.Store).ThenInclude(x => x.Building)
+                        .ThenInclude(x => x.Hub)
+                        .Where(x => x.Id == action.OrderId).Select(x => x.Store.Building.Hub.Name)
+                        .FirstOrDefaultAsync();
 #pragma warning restore CS8601 // Possible null reference assignment.
                 }
-                if (orderActionModel.ActionType == (int)OrderActionEnum.DeliveryCus)
+
+                if (orderActionModel.ActionType == (int) OrderActionEnum.DeliveryCus)
                 {
                     orderActionModel.Name = action.Order.FullName;
                 }
-                orderActionModel.ServiceName = await context.Services.Where(x => x.Id == action.Order.ServiceId).Select(x => x.Name).FirstOrDefaultAsync();
+
+                orderActionModel.ServiceName = await context.Services.Where(x => x.Id == action.Order.ServiceId)
+                    .Select(x => x.Name).FirstOrDefaultAsync();
                 var orderDetails = await context.OrderDetails.Where(x => x.OrderId == action.OrderId)
                     .Select(x => new OrderDetailActionModel
                     {
@@ -503,6 +597,7 @@ namespace DeliveryVHGP.Infrastructure.Repositories
                 orderActionModel.OrderDetailActions = orderDetails;
                 listOrderActions.Add(orderActionModel);
             }
+
             return listOrderActions;
         }
     }
