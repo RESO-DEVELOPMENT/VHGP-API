@@ -30,7 +30,7 @@ namespace DeliveryVHGP.WebApi.Controllers
                 });
             }
         }
-        [HttpPut]
+        [HttpPatch]
         public async Task<ActionResult> MinusWalletBalanceByAdmin(string AccountId, int walletType, double amonut)
         {
             try

@@ -72,7 +72,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update storeCategory with pagination
         /// </summary>
         //PUT: api/v1/storeCategory?id
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult> UpdateStoreCategory(string id, StoreCategoryModel storeCate)
         {
             try

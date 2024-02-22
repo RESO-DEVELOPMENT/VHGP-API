@@ -72,7 +72,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update Long,Lat Building  with pagination
         /// </summary>
         //PUT: api/v1/Building?id
-        [HttpPut("ByBuildingId")]
+        [HttpPatch("ByBuildingId")]
         public async Task<ActionResult> UpdateLongLatBuilding(string buildingId, BuildingDto building)
         {
             try

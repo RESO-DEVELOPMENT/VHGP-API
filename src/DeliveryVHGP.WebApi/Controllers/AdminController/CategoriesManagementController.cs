@@ -98,7 +98,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update Category with pagination
         /// </summary>
         //PUT: api/v1/Category?id
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult> UpdateCategory(string id, CategoryDto category, Boolean imgUpdate)
         {
             try

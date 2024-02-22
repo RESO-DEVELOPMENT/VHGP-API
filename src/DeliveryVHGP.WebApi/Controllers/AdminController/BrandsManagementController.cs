@@ -75,7 +75,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update Brand with pagination
         /// </summary>
         //PUT: api/v1/Brand?id
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult> UpdateBrand(string id, BrandModels brand)
         {
             try

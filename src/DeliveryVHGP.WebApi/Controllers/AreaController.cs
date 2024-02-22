@@ -121,7 +121,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update Area with pagination
         /// </summary>
         //PUT: api/v1/Area?id
-        [HttpPut("{areaId}")]
+        [HttpPatch("{areaId}")]
         public async Task<ActionResult> UpdateArea(string areaId, AreaDto area)
         {
             try

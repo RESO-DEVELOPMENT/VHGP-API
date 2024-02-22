@@ -75,7 +75,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update Hub with pagination
         /// </summary>
         //PUT: api/v1/Hub?id
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult> UpdateHub(string id, HubModels hub)
         {       
                 if (id != hub.Id)

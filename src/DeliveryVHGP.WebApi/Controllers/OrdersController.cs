@@ -152,7 +152,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update a status order (customer web)
         /// </summary>
         //POST: api/v1/order
-        [HttpPut("{orderId}")]
+        [HttpPatch("{orderId}")]
         public async Task<ActionResult<OrderStatusModel>> UpdateOrder(string orderId, OrderStatusModel order)
         {
             if (orderId != order.OrderId)
@@ -334,7 +334,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             return Ok();
         }
 
-        [HttpPut("complete")]
+        [HttpPatch("complete")]
         public async Task<ActionResult> CompleteOrder(string orderActionId, string shipperId, int actionType)
         {
             try
@@ -352,7 +352,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
-        [HttpPut("cancel")]
+        [HttpPatch("cancel")]
         public async Task<ActionResult> CancelOrder(string orderActionId, string shipperId, int actionType,
             string messageFail)
         {
@@ -374,7 +374,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// <summary>
         /// Update order (admin web)
         /// </summary>
-        [HttpPut("admin/{orderId}")]
+        [HttpPatch("admin/{orderId}")]
         public async Task<ActionResult> UpdateOrderByAdmin(string orderId, OrderUpdateModel orderUpdateModel)
         {
             try
@@ -392,7 +392,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
-        [HttpPut("admin/cancel")]
+        [HttpPatch("admin/cancel")]
         public async Task<ActionResult> CancelOrderByAdmin(string orderId, int orderStatus, string messageFail)
         {
             try
@@ -410,7 +410,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
-        [HttpPut("store/cancel")]
+        [HttpPatch("store/cancel")]
         public async Task<ActionResult> CancelOrderByStore(string orderId, string messageFail)
         {
             try

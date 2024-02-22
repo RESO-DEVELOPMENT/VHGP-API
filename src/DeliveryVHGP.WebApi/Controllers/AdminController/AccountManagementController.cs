@@ -69,7 +69,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPatch]
         public async Task<ActionResult>UpdateAccount(AccountViewModel model)
         {
             try
@@ -86,7 +86,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
-        [HttpPut("change-pass")]
+        [HttpPatch("change-pass")]
         public async Task<ActionResult> ChangePass(string id, string pass, string newPass)
         {
             try

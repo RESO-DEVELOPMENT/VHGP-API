@@ -51,7 +51,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update product Detail with pagination
         /// </summary>
         //PUT: api/v1/productDetail?id
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult> UpdateProById(string id, ProductDto product)
         {
             try

@@ -67,7 +67,7 @@ namespace DeliveryVHGP.WebApi.Controllers
 
         }
      
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult> UpdateAccountBuilding(int id, AccountBuildingDto brand)
         {
             try
@@ -85,7 +85,7 @@ namespace DeliveryVHGP.WebApi.Controllers
             }
         }
 
-        [HttpPut("address-default")]
+        [HttpPatch("address-default")]
         public async Task<ActionResult> SetAddressDefault(int id)
         {
             try

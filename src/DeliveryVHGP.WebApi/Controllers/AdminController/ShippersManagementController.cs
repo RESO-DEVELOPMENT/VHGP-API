@@ -64,7 +64,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update shipper  with pagination
         /// </summary>
         //PUT: api/v1/shipper?id
-        [HttpPut("{shipId}")]
+        [HttpPatch("{shipId}")]
         public async Task<ActionResult> UpdateShipperById(string shipId, ShipperDto shipper, Boolean imgUpdate)
         {
             try
@@ -86,7 +86,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update status shipper  with pagination
         /// </summary>
         //PUT: api/v1/shipper?id
-        [HttpPut("status/{shipId}")]
+        [HttpPatch("status/{shipId}")]
         public async Task<ActionResult> UpdateStatusStoreById(string shipId, StatusShipDto store)
         {
             try

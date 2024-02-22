@@ -173,7 +173,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update status store  with pagination
         /// </summary> 
         //PUT: api/v1/store?id
-        [HttpPut("{storeId}")]
+        [HttpPatch("{storeId}")]
         public async Task<ActionResult> UpdateStoreById(string storeId, StoreDto store, Boolean imgUpdate)
         {
             try
@@ -195,7 +195,7 @@ namespace DeliveryVHGP.WebApi.Controllers
         /// Update status store  with pagination
         /// </summary>
         //PUT: api/v1/store?id
-        [HttpPut("status/{storeId}")]
+        [HttpPatch("status/{storeId}")]
         public async Task<ActionResult> UpdateStatusStoreById(string storeId, StatusStoreDto store)
         {
             try

@@ -45,7 +45,7 @@ namespace DeliveryVHGP.WebApi.Controllers.AdminController
             return Ok(menu);
         }
 
-        [HttpPut("{menuId}")]
+        [HttpPatch("{menuId}")]
         public async Task<ActionResult<MenuDto>> UpdateMenu(string menuId, MenuDto menu)
         {
             if (menuId == null)
