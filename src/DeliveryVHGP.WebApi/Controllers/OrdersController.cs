@@ -177,6 +177,24 @@ namespace DeliveryVHGP.WebApi.Controllers
             return Ok(order);
         }
 
+        [HttpPatch("Update_PaymentType/{orderId}")]
+        public async Task<ActionResult> UpdateOrderPaymentType(string orderId, OrderUpdateModel orderUpdateModel)
+        {
+            try
+            {
+                await repository.Order.UpdateOrderPayment(orderId, orderUpdateModel);
+                return Ok(new { StatusCode = "Successful" });
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    StatusCode = "Fail",
+                    message = e.Message
+                });
+            }
+        }
+
         /// <summary>
         /// Get TimeDuration By MenuId in Mode3 (customer web)
         /// </summary>

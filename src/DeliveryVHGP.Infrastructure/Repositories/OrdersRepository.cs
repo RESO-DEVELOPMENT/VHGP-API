@@ -1373,16 +1373,76 @@ namespace DeliveryVHGP.WebApi.Repositories
 
             return new OrderStatusModel() {OrderId = orderId, StatusId = status};
         }
+        public async Task UpdateOrderPayment(string orderId, OrderUpdateModel orderUpdateModel)
+        {
+            var updatedOrder = await context.Orders.Where(o => o.Id == orderId).SingleOrDefaultAsync();
+            if (updatedOrder == null) throw new Exception("Invalid Order Id");
+
+            try
+            {
+                /* if (orderUpdateModel.BuildingId != null && orderUpdateModel.BuildingId != "")
+                {
+                    var building = await context.Buildings.Where(b => b.Id == orderUpdateModel.BuildingId).FirstOrDefaultAsync();
+                    if (building == null) throw new Exception("Invalid Building Id");
+
+                    updatedOrder.BuildingId = orderUpdateModel.BuildingId;
+                } */
+
+                if (orderUpdateModel.FullName != null && orderUpdateModel.FullName != "")
+                    updatedOrder.FullName = orderUpdateModel.FullName;
+
+                if (orderUpdateModel.PhoneNumber != null && orderUpdateModel.PhoneNumber != "")
+                    updatedOrder.PhoneNumber = orderUpdateModel.PhoneNumber;
+
+                if (orderUpdateModel.Note != null)
+                    updatedOrder.Note = orderUpdateModel.Note;
+
+                if (orderUpdateModel.Total != null)
+                    updatedOrder.Total = orderUpdateModel.Total;
+
+                if (orderUpdateModel.ShipCost != null)
+                    updatedOrder.ShipCost = orderUpdateModel.ShipCost;
+
+                var orderPayment = await context.Payments.Where(p => p.OrderId == orderId).FirstOrDefaultAsync();
+                if (orderPayment != null && orderUpdateModel.PaymentType != null)
+                {
+                    if (orderUpdateModel.PaymentType == (int)PaymentEnum.Cash)
+                    {
+                        orderPayment.Type = (int)PaymentEnum.Cash;
+                        orderPayment.Status = (int)PaymentStatusEnum.unpaid;
+                    }
+                    else if (orderUpdateModel.PaymentType == (int)PaymentEnum.VNPay)
+                    {
+                        orderPayment.Type = (int)PaymentEnum.VNPay;
+                        orderPayment.Status = (int)PaymentStatusEnum.successful;
+                    }
+                    else if (orderUpdateModel.PaymentType == (int)PaymentEnum.Paid)
+                    {
+                        orderPayment.Type = (int)PaymentEnum.Paid;
+                        orderPayment.Status = (int)PaymentStatusEnum.successful;
+                    }
+                }
+
+                ;
+
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error: {e}");
+            }
+        }
 
         public async Task<List<string>> GetListProInMenu(string orderDetailId)
         {
             List<string> listpro = await (from od in context.OrderDetails
-                    join o in context.Orders on od.OrderId equals o.Id
-                    where o.Id == orderDetailId
-                    select od.ProductId
+                                          join o in context.Orders on od.OrderId equals o.Id
+                                          where o.Id == orderDetailId
+                                          select od.ProductId
                 ).ToListAsync();
             return listpro;
         }
+        
 
         public async Task<List<TimeDurationOrder>> GetDurationOrder(string menuId, int pageIndex, int pageSize)
         {
